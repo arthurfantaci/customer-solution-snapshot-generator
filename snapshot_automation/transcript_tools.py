@@ -17,7 +17,6 @@ load_dotenv()
 
 # Pydantic models for tool arguments
 
-
 class SimpleSearchInput(BaseModel):
     query: str = Field(description="should be a search query")
 
@@ -70,7 +69,7 @@ tools = [
     MultiplyNumbersTool(),
 ]
 
-# Initialize a ChatOpenAI model
+# Initialize a ChatAnthropic model
 llm = ChatAnthropic(model_name="claude-3-5-sonnet-20240620")
 
 # Pull the prompt template from the hub
