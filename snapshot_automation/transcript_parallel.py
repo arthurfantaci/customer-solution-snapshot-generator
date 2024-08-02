@@ -74,7 +74,7 @@ relevant_docs = retriever.invoke(solution_prompt)
 # print(message.content)
 
 
-# Example usage
+# Example usage for Jack
 def get_response(prompt):
 	message = client.messages.create(
 		model="claude-3-5-sonnet-20240620",
