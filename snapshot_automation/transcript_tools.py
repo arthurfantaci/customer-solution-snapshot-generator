@@ -91,7 +91,7 @@ agent_executor = AgentExecutor.from_agent_and_tools(
 )
 
 # Test the agent with sample queries
-response = agent_executor.invoke({"input": "Search for Percona. Provide detailed information about the company. This should include basic details about the company, like 'Company Name', 'Industry' or 'Industries', 'Primary Location', and a 'Company Overview'."})
+response = agent_executor.invoke({"input": "Search for Artivion. The home page URL for Artivion is https://https://artivion.com/. Provide detailed information about the company. This should include basic details about the company, like 'Company Name', 'Industry' or 'Industries', 'Primary Location', and a 'Company Overview'."})
 print("Response for 'Search for LangChain updates':", response)
 
 # response = agent_executor.invoke({"input": "Multiply 10 and 20"})
