@@ -3,6 +3,7 @@ import nltk
 from nltk.tokenize import sent_tokenize
 import spacy
 import coreferee
+import markdown
 import re
 import os
 import logging
@@ -99,11 +100,9 @@ def enhance_content(text, min_freq=2, min_length=3):
                 span.lemma_.lower() not in common_expressions)
     
     # Extract and filter named entities
-    # entities = list(set([ent.text for ent in doc.ents if is_valid_span(ent)]))
     entities = [ent.text for ent in doc.ents if is_valid_span(ent)]
     
     # Extract and filter noun phrases (potential topics)
-    # noun_phrases = list(set([chunk.text for chunk in doc.noun_chunks if is_valid_span(chunk)]))
     noun_phrases = [chunk.text for chunk in doc.noun_chunks if is_valid_span(chunk)]
     
     # Count occurrences and filter by frequency
@@ -125,16 +124,20 @@ def enhance_content(text, min_freq=2, min_length=3):
 def output_result(text, output_file):
     """Step 5: Output the result securely"""
     try:
+        # Convert markdown to HTML
+        html = markdown.markdown(text)
+        
         # Get the directory and sanitize the filename
         output_dir = os.path.dirname(output_file) if os.path.dirname(output_file) else os.path.dirname(os.path.abspath(__file__))
         sanitized_filename = sanitize_filename(os.path.basename(output_file))
         safe_output_path = os.path.join(output_dir, sanitized_filename)
         
-        safe_file_write(safe_output_path, text)
+        safe_file_write(safe_output_path, html)
         logger.info(f"Output successfully written to {safe_output_path}")
     except Exception as e:
         logger.error(f"Failed to write output file: {type(e).__name__}")
         raise
+
 
 # Functions to address formatting inconsistencies
 def standardize_quotes(text):
@@ -264,5 +267,5 @@ if __name__ == "__main__":
     # Use relative paths from the current script location
     script_dir = os.path.dirname(os.path.abspath(__file__))
     input_file = os.path.join(script_dir, "vtt_files", "project_kickoff_transcript_v2.vtt")
-    output_file = os.path.join(script_dir, "vtt_files", "formatted_transcript_v2.md")
+    output_file = os.path.join(script_dir, "vtt_files", "formatted_transcript_html.html")
     process_vtt(input_file, output_file)

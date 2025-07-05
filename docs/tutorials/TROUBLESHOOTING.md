@@ -685,7 +685,7 @@ python monitor.py --track-memory --output memory_profile.json
 
 ```bash
 # Profile execution time
-python -m cProfile -o profile.stats customer_snapshot/main.py
+python -m cProfile -o profile.stats snapshot_automation/vtt_to_html_processor.py
 
 # Analyze profile
 python -c "

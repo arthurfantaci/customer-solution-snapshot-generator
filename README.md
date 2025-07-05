@@ -63,10 +63,10 @@ TAVILY_API_KEY=your_tavily_api_key_here    # Optional: for web search
 2. Run the main processor:
 ```bash
 # Generate HTML output with NLP analysis
-python snapshot_automation/main.py
+python snapshot_automation/vtt_to_html_processor.py
 
 # Generate Markdown output
-python snapshot_automation/main_v2.py
+python snapshot_automation/vtt_to_markdown_processor.py
 ```
 
 **Note**: Update the hardcoded file paths in the scripts to match your system.
@@ -111,8 +111,8 @@ Generated Customer Solution Snapshots include 11 sections:
 
 ```
 snapshot_automation/
-├── main.py                 # VTT to HTML processor
-├── main_v2.py             # VTT to Markdown processor
+├── vtt_to_html_processor.py      # VTT to HTML processor
+├── vtt_to_markdown_processor.py  # VTT to Markdown processor
 ├── transcript_parallel.py  # RAG implementation
 ├── transcript_tools.py     # LangChain agents
 ├── transcript_pipeline.py  # Simple processing pipeline

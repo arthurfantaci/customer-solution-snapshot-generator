@@ -30,8 +30,8 @@ cp snapshot_automation/.env.example snapshot_automation/.env
 ### Running Scripts
 ```bash
 # Main processors
-python snapshot_automation/main.py          # VTT → HTML with NLP analysis
-python snapshot_automation/main_v2.py       # VTT → Markdown with entities
+python snapshot_automation/vtt_to_html_processor.py      # VTT → HTML with NLP analysis
+python snapshot_automation/vtt_to_markdown_processor.py   # VTT → Markdown with entities
 
 # Utilities
 python snapshot_automation/transcript_parallel.py  # RAG-based Q&A system
@@ -51,7 +51,8 @@ python snapshot_automation/converter.py            # Simple VTT → Markdown
 3. **Output**: HTML/Markdown documents structured as Customer Solution Snapshots
 
 ### Key Modules
-- **main.py/main_v2.py**: Primary transcript processors with different output formats
+
+- **vtt_to_html_processor.py/vtt_to_markdown_processor.py**: Primary transcript processors with different output formats
 - **transcript_parallel.py**: RAG implementation using FAISS and VoyageAI embeddings for contextual Q&A
 - **transcript_tools.py**: LangChain ReAct agent with web search and calculation tools
 - **claude_quickstart.py**: Direct Claude API integration wrapper

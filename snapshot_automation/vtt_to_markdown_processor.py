@@ -3,32 +3,55 @@ import nltk
 from nltk.tokenize import sent_tokenize
 import spacy
 import coreferee
-import markdown
 import re
 import os
+import logging
 
 from collections import Counter
 from transformers import pipeline
 from spacy.lang.en.stop_words import STOP_WORDS
+from utils import validate_file_path, safe_file_write, sanitize_filename
+
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 summarizer = pipeline("summarization", model="facebook/bart-large-cnn")
 
 # Download necessary NLTK data
-nltk.download('punkt')
+nltk.download('punkt', quiet=True)
 
-# Load the spaCy model
-nlp = spacy.load('en_core_web_sm')
+# Load spaCy model
+try:
+    nlp = spacy.load("en_core_web_sm")
+except OSError:
+    print("Downloading spaCy model...")
+    spacy.cli.download("en_core_web_sm")
+    nlp = spacy.load("en_core_web_sm")
 
 # Add coreferee to the spaCy pipeline
 nlp.add_pipe('coreferee')
 
 
 def read_vtt(file_path):
-    """Step 1: Read the .vtt file"""
-    print(f"Reading file: {file_path}")  # Debugging print statement
-    vtt = webvtt.read(file_path)
-    full_text = " ".join([caption.text for caption in vtt])
-    return full_text
+    """Step 1: Read the .vtt file with security validation"""
+    try:
+        # Validate file path and type
+        validated_path = validate_file_path(file_path, allowed_extensions=['.vtt'])
+        
+        vtt = webvtt.read(str(validated_path))
+        full_text = " ".join([caption.text for caption in vtt])
+        logger.info(f"Successfully read VTT file with {len(vtt)} captions")
+        return full_text
+    except FileNotFoundError as e:
+        logger.error(f"VTT file not found: {file_path}")
+        raise
+    except ValueError as e:
+        logger.error(f"Invalid VTT file: {e}")
+        raise
+    except Exception as e:
+        logger.error(f"Unexpected error reading VTT file: {type(e).__name__}")
+        raise RuntimeError("Failed to read VTT file") from e
 
 def clean_text(text):
     """Step 2: Clean up the text"""
@@ -51,7 +74,7 @@ def improve_formatting(text):
     # Add markdown formatting
     formatted_text = "# Transcript\n\n"
     for sentence in sentences:
-        formatted_text += f"- {sentence}\n"
+        formatted_text += f"- {sentence.strip()}\n"
     
     return formatted_text
 
@@ -60,7 +83,7 @@ def enhance_content(text, min_freq=2, min_length=3):
     doc = nlp(text)
     
     # Custom list of common expressions to exclude
-    common_expressions = set(["you know", "I mean", "kind of", "sort of", "a lot", "in fact"])
+    common_expressions = set(["Yeah", "you know", "Excellent", "Great", "Understood", "Okay", "I mean", "kind of", "sort of", "a lot", "in fact", "Understood", "Great", "Okay, ", "Alright, "])
     
     # Parts of speech to exclude
     exclude_pos = ['DET', 'PRON', 'ADP', 'CONJ', 'CCONJ', 'PART', 'INTJ']
@@ -76,9 +99,11 @@ def enhance_content(text, min_freq=2, min_length=3):
                 span.lemma_.lower() not in common_expressions)
     
     # Extract and filter named entities
+    # entities = list(set([ent.text for ent in doc.ents if is_valid_span(ent)]))
     entities = [ent.text for ent in doc.ents if is_valid_span(ent)]
     
     # Extract and filter noun phrases (potential topics)
+    # noun_phrases = list(set([chunk.text for chunk in doc.noun_chunks if is_valid_span(chunk)]))
     noun_phrases = [chunk.text for chunk in doc.noun_chunks if is_valid_span(chunk)]
     
     # Count occurrences and filter by frequency
@@ -89,27 +114,27 @@ def enhance_content(text, min_freq=2, min_length=3):
     filtered_topics = [t for t, count in topic_counts.items() if count >= min_freq]
     
     # Construct enhanced text
-    enhanced_text = text + "\n\n## Named Entities\n"
+    enhanced_text = text + "\n\n## Named Entities\n\n"
     enhanced_text += ", ".join(set(filtered_entities)) if filtered_entities else "No named entities found."
     
-    enhanced_text += "\n\n## Potential Topics\n"
+    enhanced_text += "\n\n## Potential Topics\n\n"
     enhanced_text += ", ".join(set(filtered_topics)) if filtered_topics else "No potential topics found."
     
     return enhanced_text
 
 def output_result(text, output_file):
-    """Step 5: Output the result"""
+    """Step 5: Output the result securely"""
     try:
-        # Convert markdown to HTML
-        html = markdown.markdown(text)
+        # Get the directory and sanitize the filename
+        output_dir = os.path.dirname(output_file) if os.path.dirname(output_file) else os.path.dirname(os.path.abspath(__file__))
+        sanitized_filename = sanitize_filename(os.path.basename(output_file))
+        safe_output_path = os.path.join(output_dir, sanitized_filename)
         
-        # Write to file
-        with open(output_file, 'w', encoding='utf-8') as f:
-            f.write(html)
-        print(f"Output successfully written to {output_file}")
+        safe_file_write(safe_output_path, text)
+        logger.info(f"Output successfully written to {safe_output_path}")
     except Exception as e:
-        print(f"Error writing output file: {e}")
-
+        logger.error(f"Failed to write output file: {type(e).__name__}")
+        raise
 
 # Functions to address formatting inconsistencies
 def standardize_quotes(text):
@@ -141,7 +166,7 @@ def resolve_coreferences(text):
     if doc._.has_coref:
         resolved_text = doc._.coref_chains.resolve(text)
         return resolved_text
-    # return text
+    return text
 
 def flag_ambiguous_pronouns(text):
     """Step 4.8: Identify potentially ambiguous pronouns for manual review"""
@@ -193,65 +218,51 @@ def add_explanations(text, glossary):
 
 def process_vtt(input_file, output_file):
     """Main pipeline to process the .vtt file"""
-    # Step 1: Read the .vtt file
-    text = read_vtt(input_file)
-    if not text:
-        return
-    
-    # Step 2: Clean up the text
-    text = clean_text(text)
-    
-    # Step 3: Improve formatting and structure
-    text = improve_formatting(text)
-    
-    # Step 4.7: Resolve coreferences
-    # text = resolve_coreferences(text)
-    
-    # Step 4: Enhance content
-    text = enhance_content(text)
+    try:
+        # Step 1: Read the .vtt file
+        text = read_vtt(input_file)
+        if not text:
+            logger.warning("No text extracted from VTT file")
+            return
+        
+        # Step 2: Clean up the text
+        text = clean_text(text)
+        
+        # Step 3: Improve formatting and structure
+        text = improve_formatting(text)
+        
+        # Step 4: Enhance content
+        text = enhance_content(text)
 
-    # Step 4.5: Standardize quotes
-    text = standardize_quotes(text)
+        # Step 4.5: Standardize quotes
+        text = standardize_quotes(text)
 
-    # Step 4.6: Split long sentences
-    text = split_long_sentences(text)
+        # Step 4.6: Split long sentences
+        text = split_long_sentences(text)
+        
+        # Step 4.9: Extract technical terms
+        technical_terms = extract_technical_terms(text)
+        logger.info(f"Extracted {len(technical_terms)} technical terms")
 
-    # Step 4.8: Flag ambiguous pronouns
-    # ambiguous_pronouns = flag_ambiguous_pronouns(text)
-    # print("Potentially ambiguous pronouns:", ambiguous_pronouns)
-    
-    # Step 4.9: Extract technical terms
-    technical_terms = extract_technical_terms(text)
-    print("Technical Terms:", technical_terms)
+        # Step 5: Output the result
+        output_result(text, output_file)
 
-    # Create a glossary
-    # glossary = {}
-
-    # Fill the glossary with explanations
-    # for term in technical_terms:
-    #     context = text[max(0, text.index(term)-100):min(len(text), text.index(term)+100)]
-    #     glossary[term] = generate_explanation(term, context)
-
-    # Optionally, add or override explanations manually
-    # manual_explanations = {
-    #     "Qlik Sense": "A business intelligence and data visualization software application.",
-    #     "RAG": "Retrieval-Augmented Generation, a technique that combines information retrieval with language generation."
-    # }
-    # glossary.update(manual_explanations)
-
-    # # Apply explanations to the transcript
-    # enhanced_text = add_explanations(text, glossary)
-
-
-    # Step 5: Output the result
-    output_result(text, output_file)
-
-    print(f"Processing complete. Output saved to {output_file}")
+        logger.info("Processing completed successfully")
+        
+    except FileNotFoundError as e:
+        logger.error("Input file not found")
+        raise
+    except ValueError as e:
+        logger.error("Invalid input file or parameters")
+        raise
+    except Exception as e:
+        logger.error(f"Processing failed: {type(e).__name__}")
+        raise RuntimeError("VTT processing failed") from e
 
 # Main entry point
 if __name__ == "__main__":
     # Use relative paths from the current script location
     script_dir = os.path.dirname(os.path.abspath(__file__))
     input_file = os.path.join(script_dir, "vtt_files", "project_kickoff_transcript_v2.vtt")
-    output_file = os.path.join(script_dir, "vtt_files", "formatted_transcript.html")
+    output_file = os.path.join(script_dir, "vtt_files", "formatted_transcript_markdown.md")
     process_vtt(input_file, output_file)
