@@ -1,0 +1,39 @@
+# Core dependencies with compatible versions
+# Updated to resolve dependency conflicts
+
+# AI and language processing
+anthropic>=0.34.0
+langchain>=0.2.11
+langchain-anthropic>=0.1.15
+langchain-community>=0.2.10
+langchain-openai>=0.1.17
+langchain-text-splitters>=0.2.2
+
+# Text processing and NLP (essential for the project)
+webvtt-py>=0.4.6
+nltk>=3.8.1
+spacy>=3.7.2
+transformers>=4.41.2
+coreferee>=1.4.0
+markdown>=3.6
+
+# Document processing
+pycaption>=2.2.1
+
+# Environment and configuration
+python-dotenv>=1.0.1
+
+# System monitoring (optional for basic functionality)
+psutil>=5.9.5
+prometheus-client>=0.17.1
+requests>=2.31.0
+pyyaml>=6.0.1
+
+# Vector database (for RAG features)
+faiss-cpu>=1.8.0
+
+# CLI interface
+click>=8.1.7
+
+# Python version requirement: >=3.8
+# Install with: pip install -r requirements-working.txt

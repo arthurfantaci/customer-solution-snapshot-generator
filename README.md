@@ -24,35 +24,44 @@ This project streamlines the creation of customer success stories by automatical
 
 ### Setup
 
-1. Clone the repository:
+1. **Clone and setup virtual environment**:
 ```bash
 git clone https://github.com/arthurfantaci/customer-solution-snapshot-generator.git
 cd customer-solution-snapshot-generator
+
+# Create and activate virtual environment (recommended)
+python3 -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
 ```
 
-2. Install dependencies:
+2. **Install dependencies**:
 ```bash
-# Core dependencies
-pip install nltk spacy webvtt-py pycaption markdown transformers
-pip install anthropic langchain langchain-anthropic langchain-community
-pip install langchain-voyageai python-dotenv faiss-cpu coreferee
+# Install project dependencies
+pip install -r requirements-minimal.txt
+
+# Install coreferee (has spaCy compatibility constraints)
+pip install coreferee
 
 # Download spaCy language model
 python -m spacy download en_core_web_sm
 ```
 
-3. Set up environment variables:
+3. **Configure environment**:
 ```bash
-cd snapshot_automation
-cp .env.example .env
+# Copy environment template
+cp snapshot_automation/.env.example snapshot_automation/.env
+
+# Edit .env file and add your API keys
+# ANTHROPIC_API_KEY=your_anthropic_api_key_here
+# VOYAGEAI_API_KEY=your_voyage_api_key_here  # Optional: for RAG features
+# TAVILY_API_KEY=your_tavily_api_key_here    # Optional: for web search
 ```
 
-4. Add your API keys to `.env`:
-```
-ANTHROPIC_API_KEY=your_anthropic_api_key_here
-VOYAGEAI_API_KEY=your_voyage_api_key_here  # Optional: for RAG features
-TAVILY_API_KEY=your_tavily_api_key_here    # Optional: for web search
-```
+4. **VS Code setup** (recommended):
+   - Open project: `code .`
+   - Select interpreter: `Cmd+Shift+P` → "Python: Select Interpreter" → Choose `./venv/bin/python`
+
+**📖 For detailed setup instructions, see [SETUP.md](SETUP.md)**
 
 ## Usage
 
