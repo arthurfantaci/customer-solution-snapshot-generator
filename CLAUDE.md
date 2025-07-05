@@ -63,7 +63,7 @@ python snapshot_automation/converter.py            # Simple VTT → Markdown
 - **vtt_to_html_processor.py/vtt_to_markdown_processor.py**: Primary transcript processors with different output formats
 - **transcript_parallel.py**: RAG implementation using FAISS and VoyageAI embeddings for contextual Q&A
 - **transcript_tools.py**: LangChain ReAct agent with web search and calculation tools
-- **claude_quickstart.py**: Direct Claude API integration wrapper
+- **examples/claude_quickstart.py**: Direct Claude API integration example and test script
 
 ### Data Flow
 ```

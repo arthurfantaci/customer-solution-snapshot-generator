@@ -70,7 +70,8 @@ cp snapshot_automation/.env.example snapshot_automation/.env
 1. Check out the examples directory to see sample inputs and outputs:
 ```bash
 ls snapshot_automation/examples/
-# Shows: sample_input.vtt, sample_output_markdown.md, sample_output_html.html, Percona_Kickoff_Transcript_Summary.md
+# Shows: sample_input.vtt, sample_output_markdown.md, sample_output_html.html, 
+#        Percona_Kickoff_Transcript_Summary.md, claude_quickstart.py
 ```
 
 2. View the examples README for detailed explanations:
@@ -89,6 +90,13 @@ python snapshot_automation/vtt_to_html_processor.py
 
 # Generate Markdown output
 python snapshot_automation/vtt_to_markdown_processor.py
+```
+
+3. **Test Claude API integration** (optional):
+```bash
+# Test direct Claude API connectivity
+cd snapshot_automation/examples
+python claude_quickstart.py
 ```
 
 **Note**: Update the hardcoded file paths in the scripts to match your system.
@@ -140,8 +148,7 @@ snapshot_automation/
 ├── transcript_pipeline.py  # Simple processing pipeline
 ├── converter.py           # VTT to Markdown converter
 ├── extract_text.py        # Text extraction utilities
-├── claude_quickstart.py   # Claude API test
-├── examples/              # Example inputs and outputs
+├── examples/              # Example inputs, outputs, and API examples
 ├── template_files/        # Document templates
 ├── vtt_files/            # Input/output directory
 └── .env.example          # Environment template

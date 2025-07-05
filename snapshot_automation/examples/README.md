@@ -12,6 +12,9 @@ This directory contains example input files and output results to demonstrate th
 - **`sample_output_html.html`** - Example output from `vtt_to_html_processor.py`
 - **`Percona_Kickoff_Transcript_Summary.md`** - Real-world example of a processed customer meeting transcript
 
+### API Integration Examples
+- **`claude_quickstart.py`** - Standalone Claude API integration example and test script
+
 ## 🚀 Usage
 
 To test the processors with the sample input:
@@ -50,6 +53,20 @@ Both processors are configured to use `sample_input.vtt` by default when run dir
 - Key discussion points extracted
 - Action items and next steps
 - Professional summary format
+
+### Claude API Integration Example
+- **`claude_quickstart.py`** demonstrates direct Claude API usage
+- Shows proper API key management with environment variables
+- Includes error handling and client initialization
+- Provides a simple `get_response()` function template
+- Perfect starting point for custom integrations
+
+**Run the Claude API example:**
+```bash
+# Ensure your .env file has ANTHROPIC_API_KEY set
+cd examples
+python claude_quickstart.py
+```
 
 ## 💡 Next Steps
 
