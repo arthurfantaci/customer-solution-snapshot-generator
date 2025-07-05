@@ -5,10 +5,16 @@ import spacy
 import coreferee
 import re
 import os
+import logging
 
 from collections import Counter
 from transformers import pipeline
 from spacy.lang.en.stop_words import STOP_WORDS
+from utils import validate_file_path, safe_file_write, sanitize_filename
+
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 summarizer = pipeline("summarization", model="facebook/bart-large-cnn")
 
@@ -28,14 +34,24 @@ nlp.add_pipe('coreferee')
 
 
 def read_vtt(file_path):
-    """Step 1: Read the .vtt file"""
+    """Step 1: Read the .vtt file with security validation"""
     try:
-        vtt = webvtt.read(file_path)
+        # Validate file path and type
+        validated_path = validate_file_path(file_path, allowed_extensions=['.vtt'])
+        
+        vtt = webvtt.read(str(validated_path))
         full_text = " ".join([caption.text for caption in vtt])
+        logger.info(f"Successfully read VTT file with {len(vtt)} captions")
         return full_text
+    except FileNotFoundError as e:
+        logger.error(f"VTT file not found: {file_path}")
+        raise
+    except ValueError as e:
+        logger.error(f"Invalid VTT file: {e}")
+        raise
     except Exception as e:
-        print(f"Error reading VTT file: {e}")
-        return ""
+        logger.error(f"Unexpected error reading VTT file: {type(e).__name__}")
+        raise RuntimeError("Failed to read VTT file") from e
 
 def clean_text(text):
     """Step 2: Clean up the text"""
@@ -107,14 +123,18 @@ def enhance_content(text, min_freq=2, min_length=3):
     return enhanced_text
 
 def output_result(text, output_file):
-    """Step 5: Output the result"""
+    """Step 5: Output the result securely"""
     try:
-        # Write markdown directly to file
-        with open(output_file, 'w', encoding='utf-8') as f:
-            f.write(text)
-        print(f"Output successfully written to {output_file}")
+        # Get the directory and sanitize the filename
+        output_dir = os.path.dirname(output_file) if os.path.dirname(output_file) else os.path.dirname(os.path.abspath(__file__))
+        sanitized_filename = sanitize_filename(os.path.basename(output_file))
+        safe_output_path = os.path.join(output_dir, sanitized_filename)
+        
+        safe_file_write(safe_output_path, text)
+        logger.info(f"Output successfully written to {safe_output_path}")
     except Exception as e:
-        print(f"Error writing output file: {e}")
+        logger.error(f"Failed to write output file: {type(e).__name__}")
+        raise
 
 # Functions to address formatting inconsistencies
 def standardize_quotes(text):
@@ -198,44 +218,51 @@ def add_explanations(text, glossary):
 
 def process_vtt(input_file, output_file):
     """Main pipeline to process the .vtt file"""
-    # Step 1: Read the .vtt file
-    text = read_vtt(input_file)
-    if not text:
-        return
-    
-    # Step 2: Clean up the text
-    text = clean_text(text)
-    
-    # Step 3: Improve formatting and structure
-    text = improve_formatting(text)
-    
-    # Step 4.7: Resolve coreferences
-    # text = resolve_coreferences(text)
-    
-    # Step 4: Enhance content
-    text = enhance_content(text)
+    try:
+        # Step 1: Read the .vtt file
+        text = read_vtt(input_file)
+        if not text:
+            logger.warning("No text extracted from VTT file")
+            return
+        
+        # Step 2: Clean up the text
+        text = clean_text(text)
+        
+        # Step 3: Improve formatting and structure
+        text = improve_formatting(text)
+        
+        # Step 4: Enhance content
+        text = enhance_content(text)
 
-    # Step 4.5: Standardize quotes
-    text = standardize_quotes(text)
+        # Step 4.5: Standardize quotes
+        text = standardize_quotes(text)
 
-    # Step 4.6: Split long sentences
-    text = split_long_sentences(text)
+        # Step 4.6: Split long sentences
+        text = split_long_sentences(text)
+        
+        # Step 4.9: Extract technical terms
+        technical_terms = extract_technical_terms(text)
+        logger.info(f"Extracted {len(technical_terms)} technical terms")
 
-    # Step 4.8: Flag ambiguous pronouns
-    # ambiguous_pronouns = flag_ambiguous_pronouns(text)
-    # print("Potentially ambiguous pronouns:", ambiguous_pronouns)
-    
-    # Step 4.9: Extract technical terms
-    technical_terms = extract_technical_terms(text)
-    print("Technical Terms:", technical_terms)
+        # Step 5: Output the result
+        output_result(text, output_file)
 
-    # Step 5: Output the result
-    output_result(text, output_file)
-
-    print(f"Processing complete. Output saved to {output_file}")
+        logger.info("Processing completed successfully")
+        
+    except FileNotFoundError as e:
+        logger.error("Input file not found")
+        raise
+    except ValueError as e:
+        logger.error("Invalid input file or parameters")
+        raise
+    except Exception as e:
+        logger.error(f"Processing failed: {type(e).__name__}")
+        raise RuntimeError("VTT processing failed") from e
 
 # Main entry point
 if __name__ == "__main__":
-    input_file = "C:/Users/DQA/kickoff_transcript/snapshot_automation/vtt_files/project_kickoff_transcript_v2.vtt"
-    output_file = "C:/Users/DQA/kickoff_transcript/snapshot_automation/vtt_files/formatted_transcript_v2.md"
+    # Use relative paths from the current script location
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    input_file = os.path.join(script_dir, "vtt_files", "project_kickoff_transcript_v2.vtt")
+    output_file = os.path.join(script_dir, "vtt_files", "formatted_transcript_v2.md")
     process_vtt(input_file, output_file)

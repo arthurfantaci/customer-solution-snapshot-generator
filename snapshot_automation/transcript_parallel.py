@@ -14,8 +14,11 @@ voyage_api_key = os.getenv("VOYAGEAI_API_KEY")
 # Get the API key from the environment variable
 anthropic_api_key = os.getenv("ANTHROPIC_API_KEY")
 
-# Print the loaded API key for verification
-print(f"Loaded API Key: {anthropic_api_key}")
+# Verify API key is loaded (without exposing it)
+if anthropic_api_key:
+    print("Anthropic API key loaded successfully")
+else:
+    print("Warning: Anthropic API key not found")
 
 # Ensure the API key is available
 if not anthropic_api_key:

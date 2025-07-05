@@ -250,6 +250,8 @@ def process_vtt(input_file, output_file):
 
 # Main entry point
 if __name__ == "__main__":
-    input_file = "C:/Users/DQA/kickoff_transcript/snapshot_automation/vtt_files/project_kickoff_transcript_v2.vtt"
-    output_file = "C:/Users/DQA/kickoff_transcript/snapshot_automation/vtt_files/formatted_transcript.html"
+    # Use relative paths from the current script location
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    input_file = os.path.join(script_dir, "vtt_files", "project_kickoff_transcript_v2.vtt")
+    output_file = os.path.join(script_dir, "vtt_files", "formatted_transcript.html")
     process_vtt(input_file, output_file)

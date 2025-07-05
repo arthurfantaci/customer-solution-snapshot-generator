@@ -3,6 +3,7 @@ import nltk
 from nltk.tokenize import sent_tokenize
 import spacy
 import re
+import os
 
 # Download necessary NLTK data
 nltk.download('punkt', quiet=True)
@@ -108,6 +109,9 @@ def process_vtt(input_file, output_file):
     print(f"Processing complete. Output saved to {output_file}")
 
 # Usage
-input_file = r"C:\Users\DQA\kickoff_transcript\snapshot_automation\vtt_files\project_kickoff_transcript_v2.vtt"  # Use absolute path
-output_file = r"C:\Users\DQA\kickoff_transcript\snapshot_automation\vtt_files\formatted_transcript.html"  # Use absolute path
-process_vtt(input_file, output_file)
+if __name__ == "__main__":
+    # Use relative paths from the current script location
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    input_file = os.path.join(script_dir, "vtt_files", "project_kickoff_transcript_v2.vtt")
+    output_file = os.path.join(script_dir, "vtt_files", "formatted_transcript.html")
+    process_vtt(input_file, output_file)

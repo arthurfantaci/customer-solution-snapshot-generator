@@ -1,0 +1,35 @@
+# Development dependencies
+# Install with: pip install -r requirements-dev.txt
+
+# Include production dependencies
+-r requirements.txt
+
+# Testing framework
+pytest==8.2.2
+pytest-cov==5.0.0
+pytest-mock==3.14.0
+pytest-asyncio==0.23.7
+
+# Code quality and formatting
+black==24.4.2
+flake8==7.1.0
+mypy==1.10.1
+isort==5.13.2
+
+# Security scanning
+bandit==1.7.9
+safety==3.2.4
+
+# Git hooks and workflow
+pre-commit==3.7.1
+
+# Documentation
+sphinx==7.3.7
+sphinx-rtd-theme==2.0.0
+
+# Development utilities
+ipython==8.25.0
+jupyter==1.0.0
+
+# Type checking support
+types-requests==2.32.0.20240622

@@ -27,8 +27,10 @@ except OSError:
 # Add coreferee to the spaCy pipeline
 nlp.add_pipe('coreferee')
 
-input_file = "C:/Users/DQA/kickoff_transcript/snapshot_automation/vtt_files/project_kickoff_transcript_v2.vtt"
-output_file = "C:/Users/DQA/kickoff_transcript/snapshot_automation/vtt_files/plain_text_output.txt"
+# Use relative paths from the current script location
+script_dir = os.path.dirname(os.path.abspath(__file__))
+input_file = os.path.join(script_dir, "vtt_files", "project_kickoff_transcript_v2.vtt")
+output_file = os.path.join(script_dir, "vtt_files", "plain_text_output.txt")
 
 # Extend the list of stop words
 # additional_stop_words = {"said", "would", "could", "should", "will", "can", "may", "might"}
