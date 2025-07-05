@@ -16,7 +16,7 @@ pycaption==2.2.1
 nltk==3.8.1
 spacy==3.7.2
 transformers==4.41.2
-coreferee==1.4.0
+coreferee==1.4.1
 
 # AI and ML libraries
 faiss-cpu==1.8.0
