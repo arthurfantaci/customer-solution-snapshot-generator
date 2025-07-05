@@ -28,6 +28,14 @@ cp snapshot_automation/.env.example snapshot_automation/.env
 ```
 
 ### Running Scripts
+
+**First**, check out the examples to see what the output looks like:
+```bash
+ls snapshot_automation/examples/  # View example inputs and outputs
+cat snapshot_automation/examples/README.md  # Read examples documentation
+```
+
+**Then**, run the processors:
 ```bash
 # Main processors
 python snapshot_automation/vtt_to_html_processor.py      # VTT → HTML with NLP analysis

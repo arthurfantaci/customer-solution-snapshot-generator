@@ -56,6 +56,19 @@ TAVILY_API_KEY=your_tavily_api_key_here    # Optional: for web search
 
 ## Usage
 
+### Quick Start with Examples
+
+1. Check out the examples directory to see sample inputs and outputs:
+```bash
+ls snapshot_automation/examples/
+# Shows: sample_input.vtt, sample_output_markdown.md, sample_output_html.html, Percona_Kickoff_Transcript_Summary.md
+```
+
+2. View the examples README for detailed explanations:
+```bash
+cat snapshot_automation/examples/README.md
+```
+
 ### Basic Transcript Processing
 
 1. Place your VTT transcript files in `snapshot_automation/vtt_files/`
@@ -119,6 +132,7 @@ snapshot_automation/
 ├── converter.py           # VTT to Markdown converter
 ├── extract_text.py        # Text extraction utilities
 ├── claude_quickstart.py   # Claude API test
+├── examples/              # Example inputs and outputs
 ├── template_files/        # Document templates
 ├── vtt_files/            # Input/output directory
 └── .env.example          # Environment template
