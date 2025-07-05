@@ -61,6 +61,13 @@ class Config:
         self.spacy_model = os.getenv("SPACY_MODEL", "en_core_web_sm")
         self.min_entity_frequency = int(os.getenv("MIN_ENTITY_FREQUENCY", "2"))
         self.min_entity_length = int(os.getenv("MIN_ENTITY_LENGTH", "3"))
+        
+        # Memory optimization settings
+        self.enable_memory_monitoring = os.getenv("ENABLE_MEMORY_MONITORING", "true").lower() == "true"
+        self.memory_limit_mb = int(os.getenv("MEMORY_LIMIT_MB", "1024"))  # 1GB default
+        self.streaming_threshold_mb = int(os.getenv("STREAMING_THRESHOLD_MB", "10"))  # 10MB threshold
+        self.gc_frequency = int(os.getenv("GC_FREQUENCY", "1000"))  # GC every N operations
+        self.enable_memory_profiling = os.getenv("ENABLE_MEMORY_PROFILING", "false").lower() == "true"
     
     def _ensure_directories(self) -> None:
         """Create necessary directories if they don't exist."""

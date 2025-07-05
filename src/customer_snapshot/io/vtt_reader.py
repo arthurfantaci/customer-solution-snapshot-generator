@@ -3,12 +3,13 @@ VTT file reading functionality.
 """
 import logging
 from pathlib import Path
-from typing import Union
+from typing import Union, Iterator
 
 import webvtt
 
 from ..utils.config import Config
 from ..utils.validators import validate_file_path
+from ..utils.memory_optimizer import StreamingVTTReader, memory_profile
 
 logger = logging.getLogger(__name__)
 
@@ -29,8 +30,10 @@ class VTTReader:
             config: Configuration object
         """
         self.config = config
+        self.streaming_reader = StreamingVTTReader()
         logger.debug("VTTReader initialized")
 
+    @memory_profile
     def read_vtt(self, file_path: Union[str, Path]) -> str:
         """
         Read and parse a VTT file.
@@ -56,22 +59,29 @@ class VTTReader:
             
             logger.info(f"Reading VTT file: {validated_path}")
             
-            # Read VTT file
-            vtt = webvtt.read(str(validated_path))
+            # Check file size to determine reading strategy
+            file_size = validated_path.stat().st_size / (1024 * 1024)  # MB
             
-            # Extract text from all captions
-            caption_texts = []
-            for caption in vtt:
-                if caption.text.strip():  # Skip empty captions
-                    caption_texts.append(caption.text.strip())
-            
-            # Combine all caption text
-            full_text = " ".join(caption_texts)
-            
-            logger.info(f"Successfully read VTT file with {len(vtt)} captions")
-            logger.debug(f"Extracted {len(full_text)} characters of text")
-            
-            return full_text
+            if file_size > 10:  # Use streaming for large files
+                logger.info(f"Using streaming reader for large file ({file_size:.1f} MB)")
+                return self.read_vtt_streaming(validated_path)
+            else:
+                # Use standard reading for smaller files
+                vtt = webvtt.read(str(validated_path))
+                
+                # Extract text from all captions
+                caption_texts = []
+                for caption in vtt:
+                    if caption.text.strip():  # Skip empty captions
+                        caption_texts.append(caption.text.strip())
+                
+                # Combine all caption text
+                full_text = " ".join(caption_texts)
+                
+                logger.info(f"Successfully read VTT file with {len(vtt)} captions")
+                logger.debug(f"Extracted {len(full_text)} characters of text")
+                
+                return full_text
             
         except FileNotFoundError:
             logger.error(f"VTT file not found: {file_path}")
@@ -82,6 +92,66 @@ class VTTReader:
         except Exception as e:
             logger.error(f"Unexpected error reading VTT file: {type(e).__name__}: {e}")
             raise RuntimeError("Failed to read VTT file") from e
+    
+    def read_vtt_streaming(self, file_path: Union[str, Path]) -> str:
+        """
+        Read VTT file using memory-efficient streaming.
+        
+        Args:
+            file_path: Path to the VTT file
+            
+        Returns:
+            Combined text content from all captions
+        """
+        try:
+            caption_texts = []
+            subtitle_count = 0
+            
+            for subtitle in self.streaming_reader.read_streaming(file_path):
+                if subtitle.get('text') and subtitle['text'].strip():
+                    caption_texts.append(subtitle['text'].strip())
+                    subtitle_count += 1
+                    
+                    # Periodically yield control and manage memory
+                    if subtitle_count % 1000 == 0:
+                        logger.debug(f"Processed {subtitle_count} subtitles...")
+            
+            # Combine all caption text
+            full_text = " ".join(caption_texts)
+            
+            logger.info(f"Successfully read VTT file with {subtitle_count} captions (streaming)")
+            logger.debug(f"Extracted {len(full_text)} characters of text")
+            
+            return full_text
+            
+        except Exception as e:
+            logger.error(f"Streaming VTT read failed: {e}")
+            raise RuntimeError("Failed to read VTT file using streaming") from e
+    
+    def read_vtt_iterator(self, file_path: Union[str, Path]) -> Iterator[str]:
+        """
+        Read VTT file and yield text chunks for memory-efficient processing.
+        
+        Args:
+            file_path: Path to the VTT file
+            
+        Yields:
+            Text content from individual captions
+        """
+        try:
+            validated_path = validate_file_path(
+                file_path, 
+                allowed_extensions=['.vtt'],
+                max_size=self.config.max_file_size
+            )
+            
+            for subtitle in self.streaming_reader.read_streaming(validated_path):
+                if subtitle.get('text') and subtitle['text'].strip():
+                    yield subtitle['text'].strip()
+                    
+        except Exception as e:
+            logger.error(f"Iterator VTT read failed: {e}")
+            raise RuntimeError("Failed to iterate VTT file") from e
 
     def validate_vtt_format(self, file_path: Union[str, Path]) -> bool:
         """

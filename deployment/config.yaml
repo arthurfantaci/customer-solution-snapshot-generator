@@ -1,0 +1,158 @@
+# Deployment Configuration for Customer Solution Snapshot Generator
+# This file defines deployment settings for different environments
+
+environments:
+  development:
+    docker_image: customer-snapshot-generator
+    docker_tag: dev
+    memory_limit: 1g
+    cpu_limit: "1.0"
+    replicas: 1
+    port: 8080
+    health_check_path: /health
+    environment_vars:
+      LOG_LEVEL: DEBUG
+      ENABLE_MEMORY_MONITORING: "true"
+      DEBUG: "true"
+      MEMORY_LIMIT_MB: "512"
+      STREAMING_THRESHOLD_MB: "5"
+      GC_FREQUENCY: "500"
+      ENABLE_MEMORY_PROFILING: "true"
+    volumes:
+      - "./data:/app/data"
+      - "./logs:/app/logs"
+    
+  staging:
+    docker_image: customer-snapshot-generator
+    docker_tag: staging
+    memory_limit: 2g
+    cpu_limit: "2.0"
+    replicas: 2
+    port: 8080
+    health_check_path: /health
+    environment_vars:
+      LOG_LEVEL: INFO
+      ENABLE_MEMORY_MONITORING: "true"
+      DEBUG: "false"
+      MEMORY_LIMIT_MB: "1024"
+      STREAMING_THRESHOLD_MB: "10"
+      GC_FREQUENCY: "1000"
+      ENABLE_MEMORY_PROFILING: "false"
+      MAX_FILE_SIZE: "104857600"  # 100MB
+    volumes:
+      - "staging_data:/app/data"
+      - "staging_logs:/app/logs"
+    ingress:
+      enabled: true
+      hostname: staging-snapshot.example.com
+      tls: true
+    
+  production:
+    docker_image: customer-snapshot-generator
+    docker_tag: latest
+    memory_limit: 4g
+    cpu_limit: "4.0"
+    replicas: 3
+    port: 8080
+    health_check_path: /health
+    environment_vars:
+      LOG_LEVEL: INFO
+      ENABLE_MEMORY_MONITORING: "true"
+      DEBUG: "false"
+      MEMORY_LIMIT_MB: "2048"
+      STREAMING_THRESHOLD_MB: "10"
+      GC_FREQUENCY: "1000"
+      ENABLE_MEMORY_PROFILING: "false"
+      MAX_FILE_SIZE: "209715200"  # 200MB
+      PERFORMANCE_MONITORING: "true"
+      BENCHMARK_INTERVAL: "3600"
+    volumes:
+      - "production_data:/app/data"
+      - "production_logs:/app/logs"
+    ingress:
+      enabled: true
+      hostname: snapshot.example.com
+      tls: true
+    backup:
+      enabled: true
+      schedule: "0 2 * * *"  # Daily at 2 AM
+      retention_days: 30
+    monitoring:
+      enabled: true
+      prometheus: true
+      grafana: true
+      alerts:
+        memory_threshold: 80
+        cpu_threshold: 85
+        error_rate_threshold: 5
+
+# Global deployment settings
+global:
+  registry: ghcr.io/arthurfantaci
+  namespace_prefix: customer-snapshot
+  labels:
+    app: customer-snapshot-generator
+    version: "1.0.0"
+    component: transcript-processor
+  annotations:
+    deployment.kubernetes.io/revision: "1"
+    
+# Resource quotas by environment
+resource_quotas:
+  development:
+    cpu_requests: "0.5"
+    cpu_limits: "1.0"
+    memory_requests: "512Mi"
+    memory_limits: "1Gi"
+  staging:
+    cpu_requests: "1.0"
+    cpu_limits: "2.0"
+    memory_requests: "1Gi"
+    memory_limits: "2Gi"
+  production:
+    cpu_requests: "2.0"
+    cpu_limits: "4.0"
+    memory_requests: "2Gi"
+    memory_limits: "4Gi"
+
+# Security settings
+security:
+  run_as_non_root: true
+  run_as_user: 1000
+  run_as_group: 1000
+  fs_group: 1000
+  security_context:
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: false
+    capabilities:
+      drop:
+        - ALL
+
+# Network policies
+network_policies:
+  enabled: true
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: ingress-nginx
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: monitoring
+  egress:
+    - to: []
+      ports:
+        - protocol: TCP
+          port: 443  # HTTPS
+        - protocol: TCP
+          port: 80   # HTTP
+
+# Backup configuration
+backup:
+  storage_class: fast-ssd
+  retention_policy:
+    daily: 7
+    weekly: 4
+    monthly: 12
+  encryption: true

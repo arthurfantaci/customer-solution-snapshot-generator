@@ -1,0 +1,78 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: customer-snapshot-config
+  namespace: customer-snapshot-generator
+  labels:
+    app: customer-snapshot-generator
+    component: config
+data:
+  # Application configuration
+  LOG_LEVEL: "INFO"
+  DEBUG: "false"
+  ENABLE_MEMORY_MONITORING: "true"
+  MEMORY_LIMIT_MB: "2048"
+  STREAMING_THRESHOLD_MB: "10"
+  GC_FREQUENCY: "1000"
+  ENABLE_MEMORY_PROFILING: "false"
+  
+  # File processing settings
+  MAX_FILE_SIZE: "209715200"  # 200MB
+  ALLOWED_EXTENSIONS: ".vtt,.txt,.md,.html"
+  CHUNK_SIZE: "500"
+  CHUNK_OVERLAP: "100"
+  
+  # NLP settings
+  SPACY_MODEL: "en_core_web_sm"
+  MIN_ENTITY_FREQUENCY: "2"
+  MIN_ENTITY_LENGTH: "3"
+  
+  # Performance settings
+  PERFORMANCE_MONITORING: "true"
+  BENCHMARK_INTERVAL: "3600"
+  ALERT_MEMORY_THRESHOLD: "80"
+  ALERT_CPU_THRESHOLD: "85"
+  
+  # Health check settings
+  HEALTHCHECK_INTERVAL: "30"
+  
+  # Application configuration file
+  app.yaml: |
+    server:
+      host: "0.0.0.0"
+      port: 8080
+      workers: 4
+    
+    logging:
+      level: INFO
+      format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+      handlers:
+        - console
+        - file
+    
+    memory:
+      monitoring_enabled: true
+      limit_mb: 2048
+      streaming_threshold_mb: 10
+      gc_frequency: 1000
+      profiling_enabled: false
+    
+    processing:
+      max_file_size: 209715200
+      chunk_size: 500
+      chunk_overlap: 100
+      timeout_seconds: 300
+    
+    nlp:
+      model: "en_core_web_sm"
+      min_entity_frequency: 2
+      min_entity_length: 3
+      batch_size: 32
+    
+    performance:
+      monitoring_enabled: true
+      benchmark_interval: 3600
+      alert_thresholds:
+        memory_percent: 80
+        cpu_percent: 85
+        error_rate_percent: 5

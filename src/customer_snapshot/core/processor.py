@@ -7,6 +7,7 @@ from typing import Dict, List, Optional, Union
 
 from ..utils.config import Config
 from ..utils.validators import validate_file_path, safe_file_write, sanitize_filename
+from ..utils.memory_optimizer import MemoryOptimizer, memory_profile, start_memory_monitoring
 from ..io.vtt_reader import VTTReader
 from ..io.output_writer import OutputWriter
 from .nlp_engine import NLPEngine
@@ -32,12 +33,20 @@ class TranscriptProcessor:
         self.config = config or Config.get_default()
         self.config.validate()
         
+        # Initialize memory optimizer
+        self.memory_optimizer = MemoryOptimizer(self.config)
+        
+        # Start memory monitoring if configured
+        if getattr(self.config, 'enable_memory_monitoring', True):
+            start_memory_monitoring(self.config, interval=30)
+        
         self.vtt_reader = VTTReader(self.config)
         self.nlp_engine = NLPEngine(self.config)
         self.output_writer = OutputWriter(self.config)
         
         logger.info("TranscriptProcessor initialized successfully")
 
+    @memory_profile
     def process_file(
         self, 
         input_path: Union[str, Path], 
@@ -60,31 +69,41 @@ class TranscriptProcessor:
             ValueError: If file format is invalid
             RuntimeError: If processing fails
         """
+        # Enable memory optimizations for large files
+        file_size = Path(input_path).stat().st_size / (1024 * 1024)  # MB
+        if file_size > 10:  # Files larger than 10MB
+            self.memory_optimizer.optimize_for_large_files()
+            logger.info(f"Applied large file optimizations for {file_size:.1f} MB file")
+        
         try:
-            # Validate input file
-            input_path = validate_file_path(input_path, allowed_extensions=['.vtt'])
-            logger.info(f"Processing VTT file: {input_path}")
-            
-            # Generate output path if not provided
-            if output_path is None:
-                output_path = self._generate_output_path(input_path, output_format)
-            
-            # Process the transcript through the pipeline
-            processed_content = self._process_pipeline(input_path)
-            
-            if not processed_content.strip():
-                logger.warning("No content extracted from VTT file")
-                raise ValueError("No processable content found in VTT file")
-            
-            # Write output
-            final_output_path = self.output_writer.write_output(
-                content=processed_content,
-                output_path=output_path,
-                format_type=output_format
-            )
-            
-            logger.info(f"Processing completed successfully: {final_output_path}")
-            return final_output_path
+            with self.memory_optimizer.memory_monitoring("File processing"):
+                # Validate input file
+                input_path = validate_file_path(input_path, allowed_extensions=['.vtt'])
+                logger.info(f"Processing VTT file: {input_path}")
+                
+                # Generate output path if not provided
+                if output_path is None:
+                    output_path = self._generate_output_path(input_path, output_format)
+                
+                # Process the transcript through the pipeline
+                processed_content = self._process_pipeline(input_path)
+                
+                if not processed_content.strip():
+                    logger.warning("No content extracted from VTT file")
+                    raise ValueError("No processable content found in VTT file")
+                
+                # Write output
+                final_output_path = self.output_writer.write_output(
+                    content=processed_content,
+                    output_path=output_path,
+                    format_type=output_format
+                )
+                
+                # Force cleanup after processing
+                self.memory_optimizer.force_garbage_collection()
+                
+                logger.info(f"Processing completed successfully: {final_output_path}")
+                return final_output_path
             
         except FileNotFoundError:
             logger.error(f"Input file not found: {input_path}")

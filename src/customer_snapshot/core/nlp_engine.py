@@ -11,6 +11,7 @@ import spacy
 from spacy.lang.en.stop_words import STOP_WORDS
 
 from ..utils.config import Config
+from ..utils.memory_optimizer import MemoryEfficientNLPProcessor, memory_profile
 
 logger = logging.getLogger(__name__)
 
@@ -32,6 +33,7 @@ class NLPEngine:
         """
         self.config = config
         self._nlp_model: Optional[spacy.Language] = None
+        self.memory_processor = MemoryEfficientNLPProcessor(config)
         self._setup_nltk()
         logger.info("NLPEngine initialized")
 
