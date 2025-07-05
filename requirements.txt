@@ -24,6 +24,9 @@ faiss-cpu==1.8.0
 # Document processing
 markdown==3.6
 
+# CLI interface
+click==8.1.7
+
 # Python version requirement: >=3.8
 # Install with: pip install -r requirements.txt
 # For development: pip install -r requirements-dev.txt

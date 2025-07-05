@@ -42,6 +42,7 @@ dependencies = [
     "coreferee>=1.4.0",
     "faiss-cpu>=1.8.0",
     "markdown>=3.6",
+    "click>=8.1.7",
 ]
 
 [project.optional-dependencies]

@@ -1,0 +1,48 @@
+[flake8]
+max-line-length = 88
+extend-ignore = 
+    # Black compatibility
+    E203,  # whitespace before ':'
+    W503,  # line break before binary operator
+    # Documentation
+    D100,  # Missing docstring in public module
+    D104,  # Missing docstring in public package
+    D105,  # Missing docstring in magic method
+exclude = 
+    .git,
+    __pycache__,
+    build,
+    dist,
+    .eggs,
+    *.egg-info,
+    .venv,
+    .mypy_cache,
+    .pytest_cache,
+    .tox,
+    docs/_build,
+    # Legacy code (will be refactored)
+    snapshot_automation/main.py,
+    snapshot_automation/main_v2.py,
+    snapshot_automation/extract_text.py
+
+# Error codes
+select = 
+    E,   # pycodestyle errors
+    W,   # pycodestyle warnings
+    F,   # pyflakes
+    C,   # mccabe complexity
+    D,   # pydocstyle
+
+# Per-file ignores
+per-file-ignores =
+    __init__.py:F401,D104
+    tests/*:D100,D101,D102,D103
+    conftest.py:D100
+    setup.py:D100
+
+# Docstring settings
+docstring-convention = google
+ignore-decorators = property
+
+# Complexity
+max-complexity = 10
