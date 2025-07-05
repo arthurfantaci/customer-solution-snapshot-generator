@@ -12,6 +12,8 @@ from spacy.lang.en.stop_words import STOP_WORDS
 
 from ..utils.config import Config
 from ..utils.memory_optimizer import MemoryEfficientNLPProcessor, memory_profile
+from ..utils.error_handling import with_error_tracking, handle_api_calls, ErrorBoundary
+from ..monitoring.error_tracker import ErrorCategory, ErrorContext, get_error_tracker
 
 logger = logging.getLogger(__name__)
 

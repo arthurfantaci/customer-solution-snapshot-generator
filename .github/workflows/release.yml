@@ -1,0 +1,490 @@
+name: Production Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g., v1.0.0)'
+        required: true
+        type: string
+      release_type:
+        description: 'Release type'
+        required: true
+        type: choice
+        options:
+          - major
+          - minor
+          - patch
+          - hotfix
+
+permissions:
+  contents: write
+  packages: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  validate-release:
+    name: Validate Release
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      release_notes: ${{ steps.notes.outputs.release_notes }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Determine version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            VERSION=${GITHUB_REF#refs/tags/}
+          else
+            VERSION=${{ github.event.inputs.version }}
+          fi
+          
+          # Validate version format
+          if ! echo "$VERSION" | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9]+)?$'; then
+            echo "Error: Invalid version format. Expected: v1.0.0 or v1.0.0-beta"
+            exit 1
+          fi
+          
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Release version: $VERSION"
+
+      - name: Check if release exists
+        run: |
+          if git tag -l | grep -q "^${{ steps.version.outputs.version }}$"; then
+            echo "Error: Release ${{ steps.version.outputs.version }} already exists"
+            exit 1
+          fi
+
+      - name: Generate release notes
+        id: notes
+        run: |
+          # Get the previous tag
+          PREV_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          
+          if [ -z "$PREV_TAG" ]; then
+            echo "First release"
+            COMMITS=$(git log --pretty=format:"- %s" | head -20)
+          else
+            COMMITS=$(git log --pretty=format:"- %s" ${PREV_TAG}..HEAD)
+          fi
+          
+          # Create release notes
+          cat > release_notes.md << EOF
+          # Release ${{ steps.version.outputs.version }}
+          
+          ## What's Changed
+          
+          ${COMMITS}
+          
+          ## Contributors
+          $(git log ${PREV_TAG}..HEAD --pretty=format:"%an" | sort -u | sed 's/^/- @/')
+          
+          **Full Changelog**: ${PREV_TAG}...${{ steps.version.outputs.version }}
+          EOF
+          
+          echo "release_notes<<EOF" >> $GITHUB_OUTPUT
+          cat release_notes.md >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+  run-tests:
+    name: Run Tests
+    needs: validate-release
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.8', '3.9', '3.10', '3.11']
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+          python -m spacy download en_core_web_sm
+          python -m nltk.downloader punkt
+
+      - name: Run tests
+        run: |
+          pytest tests/ --cov=src/customer_snapshot --cov-report=xml --cov-report=html
+          
+      - name: Run security scan
+        run: |
+          bandit -r src/ -f json -o bandit-report.json || true
+          
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-results-${{ matrix.python-version }}
+          path: |
+            htmlcov/
+            coverage.xml
+            bandit-report.json
+
+  build-and-test-docker:
+    name: Build and Test Docker Image
+    needs: validate-release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build test image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: false
+          load: true
+          tags: customer-snapshot:test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Test Docker image
+        run: |
+          # Run health check
+          docker run --rm customer-snapshot:test python /usr/local/bin/healthcheck.py
+          
+          # Test CLI functionality
+          docker run --rm customer-snapshot:test customer-snapshot config-info
+          
+          # Test with sample data
+          docker run --rm -v $(pwd)/tests/data:/app/data/input customer-snapshot:test \
+            customer-snapshot process /app/data/input/sample.vtt --output-format markdown
+
+      - name: Scan Docker image
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: customer-snapshot:test
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Upload scan results
+        uses: github/codeql-action/upload-sarif@v2
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  performance-validation:
+    name: Performance Validation
+    needs: validate-release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          python -m spacy download en_core_web_sm
+          python -m nltk.downloader punkt
+
+      - name: Run performance benchmarks
+        run: |
+          python benchmark.py --output benchmark-results.json
+          
+          # Check performance against thresholds
+          python -c "
+          import json
+          with open('benchmark-results.json') as f:
+              results = json.load(f)
+          
+          # Validate performance metrics
+          if results['small_file']['processing_time'] > 5.0:
+              print('Error: Small file processing too slow')
+              exit(1)
+          
+          if results['medium_file']['memory_peak_mb'] > 500:
+              print('Error: Memory usage too high')
+              exit(1)
+          
+          print('Performance validation passed')
+          "
+
+      - name: Upload benchmark results
+        uses: actions/upload-artifact@v3
+        with:
+          name: benchmark-results
+          path: benchmark-results.json
+
+  create-release:
+    name: Create Release
+    needs: [validate-release, run-tests, build-and-test-docker, performance-validation]
+    runs-on: ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create tag
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git tag -a ${{ needs.validate-release.outputs.version }} -m "Release ${{ needs.validate-release.outputs.version }}"
+          git push origin ${{ needs.validate-release.outputs.version }}
+
+      - name: Create GitHub Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ needs.validate-release.outputs.version }}
+          release_name: Release ${{ needs.validate-release.outputs.version }}
+          body: ${{ needs.validate-release.outputs.release_notes }}
+          draft: false
+          prerelease: ${{ contains(needs.validate-release.outputs.version, '-') }}
+
+  build-artifacts:
+    name: Build Release Artifacts
+    needs: [validate-release, create-release]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install build dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install build wheel setuptools
+
+      - name: Build Python package
+        run: |
+          python -m build
+          
+      - name: Create source archive
+        run: |
+          VERSION=${{ needs.validate-release.outputs.version }}
+          tar -czf customer-snapshot-generator-${VERSION}.tar.gz \
+            --exclude='.git' \
+            --exclude='__pycache__' \
+            --exclude='*.pyc' \
+            --exclude='.pytest_cache' \
+            --exclude='htmlcov' \
+            --exclude='dist' \
+            --exclude='build' \
+            --exclude='*.egg-info' \
+            .
+
+      - name: Upload wheel
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: ./dist/customer_snapshot-*.whl
+          asset_name: customer_snapshot-${{ needs.validate-release.outputs.version }}-py3-none-any.whl
+          asset_content_type: application/zip
+
+      - name: Upload source distribution
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: ./dist/customer-snapshot-*.tar.gz
+          asset_name: customer-snapshot-${{ needs.validate-release.outputs.version }}.tar.gz
+          asset_content_type: application/gzip
+
+      - name: Upload source archive
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: ./customer-snapshot-generator-*.tar.gz
+          asset_name: customer-snapshot-generator-${{ needs.validate-release.outputs.version }}.tar.gz
+          asset_content_type: application/gzip
+
+  publish-docker:
+    name: Publish Docker Image
+    needs: [validate-release, create-release]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ${{ secrets.DOCKER_USERNAME }}/customer-snapshot-generator
+            ghcr.io/${{ github.repository }}
+          tags: |
+            type=semver,pattern={{version}},value=${{ needs.validate-release.outputs.version }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ needs.validate-release.outputs.version }}
+            type=semver,pattern={{major}},value=${{ needs.validate-release.outputs.version }}
+            type=raw,value=latest,enable=${{ !contains(needs.validate-release.outputs.version, '-') }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy-documentation:
+    name: Deploy Documentation
+    needs: [validate-release, create-release]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+
+      - name: Build documentation
+        run: |
+          cd docs
+          make clean
+          make html
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./docs/build/html
+          destination_dir: ${{ needs.validate-release.outputs.version }}
+
+      - name: Update latest symlink
+        if: ${{ !contains(needs.validate-release.outputs.version, '-') }}
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./docs/build/html
+          destination_dir: latest
+
+  post-release-validation:
+    name: Post-Release Validation
+    needs: [validate-release, create-release, publish-docker, deploy-documentation]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate Docker image
+        run: |
+          VERSION=${{ needs.validate-release.outputs.version }}
+          
+          # Test Docker Hub image
+          docker pull ${{ secrets.DOCKER_USERNAME }}/customer-snapshot-generator:${VERSION}
+          docker run --rm ${{ secrets.DOCKER_USERNAME }}/customer-snapshot-generator:${VERSION} \
+            customer-snapshot --version
+          
+          # Test GitHub Container Registry image
+          docker pull ghcr.io/${{ github.repository }}:${VERSION}
+          docker run --rm ghcr.io/${{ github.repository }}:${VERSION} \
+            customer-snapshot --version
+
+      - name: Validate documentation
+        run: |
+          VERSION=${{ needs.validate-release.outputs.version }}
+          URL="https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/${VERSION}/index.html"
+          
+          # Check if documentation is accessible
+          if curl -f -s -o /dev/null "$URL"; then
+            echo "Documentation deployed successfully at $URL"
+          else
+            echo "Error: Documentation not accessible at $URL"
+            exit 1
+          fi
+
+      - name: Create success notification
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const version = '${{ needs.validate-release.outputs.version }}';
+            const releaseUrl = `https://github.com/${{ github.repository }}/releases/tag/${version}`;
+            
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `🎉 Release ${version} has been successfully published!\n\n` +
+                    `- [Release Notes](${releaseUrl})\n` +
+                    `- [Docker Image](https://hub.docker.com/r/${{ secrets.DOCKER_USERNAME }}/customer-snapshot-generator/tags)\n` +
+                    `- [Documentation](https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/${version}/)`
+            });
+
+  cleanup:
+    name: Cleanup
+    needs: [post-release-validation]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Clean up artifacts
+        uses: geekyeggo/delete-artifact@v2
+        with:
+          name: |
+            test-results-*
+            benchmark-results

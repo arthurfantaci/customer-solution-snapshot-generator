@@ -1,0 +1,104 @@
+# Release Drafter Configuration
+# https://github.com/release-drafter/release-drafter
+
+name-template: 'v$RESOLVED_VERSION'
+tag-template: 'v$RESOLVED_VERSION'
+
+categories:
+  - title: '🚀 Features'
+    labels:
+      - 'feature'
+      - 'enhancement'
+  - title: '🐛 Bug Fixes'
+    labels:
+      - 'fix'
+      - 'bugfix'
+      - 'bug'
+  - title: '🧰 Maintenance'
+    labels:
+      - 'chore'
+      - 'maintenance'
+  - title: '📚 Documentation'
+    labels:
+      - 'documentation'
+      - 'docs'
+  - title: '🧪 Testing'
+    labels:
+      - 'test'
+      - 'testing'
+  - title: '🔒 Security'
+    labels:
+      - 'security'
+  - title: '🏗️ Infrastructure'
+    labels:
+      - 'infrastructure'
+      - 'ci'
+      - 'cd'
+  - title: '⚡ Performance'
+    labels:
+      - 'performance'
+      - 'optimization'
+
+change-template: '- $TITLE @$AUTHOR (#$NUMBER)'
+change-title-escapes: '\<*_&'
+
+version-resolver:
+  major:
+    labels:
+      - 'major'
+      - 'breaking-change'
+  minor:
+    labels:
+      - 'minor'
+      - 'feature'
+      - 'enhancement'
+  patch:
+    labels:
+      - 'patch'
+      - 'fix'
+      - 'bugfix'
+      - 'bug'
+      - 'maintenance'
+      - 'docs'
+      - 'documentation'
+      - 'chore'
+  default: patch
+
+template: |
+  ## Changes in this Release
+
+  $CHANGES
+
+  ## 📊 Release Statistics
+
+  - **Contributors**: $CONTRIBUTORS
+  - **Merged PRs**: $NUMBER_OF_CHANGES
+  - **Closed Issues**: Check [milestone](https://github.com/$OWNER/$REPOSITORY/milestone/$MILESTONE?closed=1)
+
+  ## 🚀 Deployment
+
+  ### Docker
+  ```bash
+  docker pull $OWNER/customer-snapshot-generator:$RESOLVED_VERSION
+  ```
+
+  ### Python Package
+  ```bash
+  pip install customer-snapshot==$RESOLVED_VERSION
+  ```
+
+  ## 📖 Documentation
+
+  - [User Guide](https://$OWNER.github.io/$REPOSITORY/latest/)
+  - [API Reference](https://$OWNER.github.io/$REPOSITORY/latest/api/)
+  - [Release Notes](https://github.com/$OWNER/$REPOSITORY/releases)
+
+  ## 🔄 Upgrading
+
+  See [UPGRADING.md](https://github.com/$OWNER/$REPOSITORY/blob/main/UPGRADING.md) for detailed upgrade instructions.
+
+  ## 🙏 Acknowledgments
+
+  Thanks to all contributors who made this release possible!
+
+  **Full Changelog**: https://github.com/$OWNER/$REPOSITORY/compare/$PREVIOUS_TAG...v$RESOLVED_VERSION

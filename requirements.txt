@@ -10,6 +10,12 @@ langchain-text-splitters==0.2.2
 # Environment and configuration
 python-dotenv==1.0.1
 
+# System monitoring and error tracking
+psutil==5.9.5
+prometheus-client==0.17.1
+requests==2.31.0
+pyyaml==6.0.1
+
 # Text processing and NLP
 webvtt-py==0.4.6
 pycaption==2.2.1

@@ -8,6 +8,8 @@ from typing import Dict, List, Optional, Union
 from ..utils.config import Config
 from ..utils.validators import validate_file_path, safe_file_write, sanitize_filename
 from ..utils.memory_optimizer import MemoryOptimizer, memory_profile, start_memory_monitoring
+from ..utils.error_handling import with_error_tracking, handle_file_operations, ErrorBoundary
+from ..monitoring.error_tracker import ErrorCategory, ErrorContext, get_error_tracker
 from ..io.vtt_reader import VTTReader
 from ..io.output_writer import OutputWriter
 from .nlp_engine import NLPEngine
@@ -47,6 +49,8 @@ class TranscriptProcessor:
         logger.info("TranscriptProcessor initialized successfully")
 
     @memory_profile
+    @with_error_tracking(category=ErrorCategory.FILE_IO)
+    @handle_file_operations
     def process_file(
         self, 
         input_path: Union[str, Path], 
