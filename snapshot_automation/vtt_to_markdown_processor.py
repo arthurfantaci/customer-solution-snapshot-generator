@@ -262,8 +262,29 @@ def process_vtt(input_file, output_file):
 
 # Main entry point
 if __name__ == "__main__":
+    import sys
+    
+    # Parse command-line arguments
+    if len(sys.argv) == 1:
+        # No arguments provided, use defaults
+        input_filename = "input.vtt"
+        output_filename = "output.md"
+    elif len(sys.argv) == 2:
+        # Only input file provided
+        input_filename = sys.argv[1]
+        output_filename = "output.md"
+    elif len(sys.argv) == 3:
+        # Both input and output files provided
+        input_filename = sys.argv[1]
+        output_filename = sys.argv[2]
+    else:
+        print("Usage: python vtt_to_markdown_processor.py [input_file] [output_file]")
+        print("Defaults: input_file='input.vtt', output_file='output.md'")
+        sys.exit(1)
+    
     # Use relative paths from the current script location
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    input_file = os.path.join(script_dir, "vtt_files", "project_kickoff_transcript_v2.vtt")
-    output_file = os.path.join(script_dir, "vtt_files", "formatted_transcript_markdown.md")
+    input_file = os.path.join(script_dir, "vtt_files", input_filename)
+    output_file = os.path.join(script_dir, "vtt_files", output_filename)
+    
     process_vtt(input_file, output_file)
