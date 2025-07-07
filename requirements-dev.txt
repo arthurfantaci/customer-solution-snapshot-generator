@@ -17,7 +17,7 @@ mypy==1.10.1
 isort==5.13.2
 
 # Security scanning
-bandit==1.7.9
+bandit==1.8.6
 safety==3.2.4
 
 # Git hooks and workflow
