@@ -1,6 +1,6 @@
 # Core dependencies with pinned versions for reproducible builds
 anthropic==0.34.0
-langchain==0.2.11
+langchain==0.3.27
 langchain-anthropic==0.1.15
 langchain-community==0.2.10
 langchain-openai==0.1.17
