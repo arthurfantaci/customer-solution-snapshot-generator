@@ -21,7 +21,7 @@ bandit==1.7.9
 safety==3.2.4
 
 # Git hooks and workflow
-pre-commit==3.7.1
+pre-commit==4.3.0
 
 # Documentation
 sphinx==7.3.7
