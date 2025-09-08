@@ -460,7 +460,7 @@ jobs:
           fi
 
       - name: Create success notification
-        uses: actions/github-script@v6
+        uses: actions/github-script@v8
         with:
           script: |
             const version = '${{ needs.validate-release.outputs.version }}';

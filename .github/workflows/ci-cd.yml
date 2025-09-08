@@ -286,7 +286,7 @@ jobs:
     
     steps:
     - name: Delete old images
-      uses: actions/github-script@v6
+      uses: actions/github-script@v8
       with:
         script: |
           const package_name = context.repo.repo;
