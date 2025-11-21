@@ -1,23 +1,27 @@
 version: 2
 updates:
-  # Python dependencies
-  - package-ecosystem: "pip"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "06:00"
-    open-pull-requests-limit: 10
-    reviewers:
-      - "arthurfantaci"
-    assignees:
-      - "arthurfantaci"
-    commit-message:
-      prefix: "deps"
-      include: "scope"
-    labels:
-      - "dependencies"
-      - "automated"
+  # Python dependencies - DISABLED
+  # Project now uses uv for dependency management via pyproject.toml and uv.lock
+  # Dependabot pip ecosystem is incompatible with uv workflow
+  # Manual dependency updates should be performed using: uv sync --upgrade
+  #
+  # - package-ecosystem: "pip"
+  #   directory: "/"
+  #   schedule:
+  #     interval: "weekly"
+  #     day: "monday"
+  #     time: "06:00"
+  #   open-pull-requests-limit: 10
+  #   reviewers:
+  #     - "arthurfantaci"
+  #   assignees:
+  #     - "arthurfantaci"
+  #   commit-message:
+  #     prefix: "deps"
+  #     include: "scope"
+  #   labels:
+  #     - "dependencies"
+  #     - "automated"
 
   # GitHub Actions
   - package-ecosystem: "github-actions"
