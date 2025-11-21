@@ -1,7 +1,23 @@
+"""VTT to Markdown processor with NLP-enhanced entity extraction and topic analysis.
+
+This module provides a comprehensive pipeline for processing WebVTT transcript files
+into Markdown format with enhanced NLP features including:
+- Named entity recognition and extraction
+- Topic identification from noun phrases
+- Coreference resolution for pronouns
+- Technical term extraction and glossary generation
+- Quote standardization and sentence splitting
+- Ambiguous pronoun detection
+
+The pipeline consists of multiple stages from raw VTT parsing through to
+formatted Markdown output with structured entity and topic sections.
+"""
+
 import logging
 import os
 import re
 from collections import Counter
+from typing import Any
 
 import webvtt
 
@@ -20,8 +36,28 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def read_vtt(file_path):
-    """Step 1: Read the .vtt file with security validation"""
+def read_vtt(file_path: str) -> str:
+    """Read and parse a WebVTT subtitle file with security validation.
+
+    Validates the file path and extension, reads all captions from the VTT file,
+    and concatenates them into a single text string.
+
+    Args:
+        file_path: Path to the WebVTT (.vtt) file to read.
+
+    Returns:
+        Concatenated text from all captions in the VTT file.
+
+    Raises:
+        FileNotFoundError: If the specified VTT file does not exist.
+        ValueError: If the file is not a valid VTT file or extension is invalid.
+        RuntimeError: If an unexpected error occurs during file reading.
+
+    Example:
+        >>> text = read_vtt("meeting_transcript.vtt")
+        >>> print(len(text))
+        15420
+    """
     try:
         # Validate file path and type
         validated_path = validate_file_path(file_path, allowed_extensions=[".vtt"])
@@ -41,8 +77,23 @@ def read_vtt(file_path):
         raise RuntimeError("Failed to read VTT file") from e
 
 
-def clean_text(text):
-    """Step 2: Clean up the text"""
+def clean_text(text: str) -> str:
+    r"""Clean and normalize transcript text.
+
+    Removes speaker labels, timestamps, and extra whitespace from the raw
+    transcript text to prepare it for NLP processing.
+
+    Args:
+        text: Raw transcript text with speaker labels and timestamps.
+
+    Returns:
+        Cleaned text with speaker labels, timestamps, and extra whitespace removed.
+
+    Example:
+        >>> raw = "Speaker1: Hello there  \n  Speaker2: How are you?"
+        >>> clean_text(raw)
+        'Hello there How are you?'
+    """
     # Remove speaker labels (assuming they're in the format "Speaker:")
     text = re.sub(r"\b\w+:", "", text)
 
@@ -55,8 +106,23 @@ def clean_text(text):
     return text
 
 
-def improve_formatting(text):
-    """Step 3: Improve formatting and structure"""
+def improve_formatting(text: str) -> str:
+    r"""Convert text into structured Markdown format with bullet points.
+
+    Splits the text into sentences using NLTK tokenization and formats each
+    sentence as a Markdown bullet point under a "Transcript" heading.
+
+    Args:
+        text: Cleaned transcript text to format.
+
+    Returns:
+        Markdown-formatted text with heading and bulleted sentences.
+
+    Example:
+        >>> text = "First sentence. Second sentence."
+        >>> improve_formatting(text)
+        '# Transcript\\n\\n- First sentence.\\n- Second sentence.\\n'
+    """
     # Lazy load sentence tokenizer
     sent_tokenize = get_sentence_tokenizer()
 
@@ -71,8 +137,27 @@ def improve_formatting(text):
     return formatted_text
 
 
-def enhance_content(text, min_freq=2, min_length=3):
-    """Step 4: Enhance content with filtered entities and topics"""
+def enhance_content(text: str, min_freq: int = 2, min_length: int = 3) -> str:
+    """Enhance transcript with filtered named entities and topic extraction.
+
+    Uses spaCy NLP with coreference resolution to extract and filter named entities
+    and noun phrases (topics) from the text. Filters out common expressions,
+    stop words, and low-frequency terms to focus on meaningful content.
+
+    Args:
+        text: Formatted transcript text to enhance.
+        min_freq: Minimum occurrence frequency for entities/topics to be included.
+        min_length: Minimum token length for valid spans.
+
+    Returns:
+        Enhanced text with appended sections for Named Entities and Potential Topics.
+
+    Example:
+        >>> text = "John Smith from Acme Corp discussed the API integration..."
+        >>> enhanced = enhance_content(text)
+        >>> "## Named Entities" in enhanced
+        True
+    """
     # Lazy load NLP model with coreferee
     nlp = get_nlp_model_with_coreferee()
     doc = nlp(text)
@@ -103,7 +188,8 @@ def enhance_content(text, min_freq=2, min_length=3):
     )
 
     # Function to check if a span is valid
-    def is_valid_span(span):
+    def is_valid_span(span: Any) -> bool:
+        """Check if a spaCy span meets validity criteria for extraction."""
         return (
             len(span) >= min_length
             and not any(
@@ -146,8 +232,24 @@ def enhance_content(text, min_freq=2, min_length=3):
     return enhanced_text
 
 
-def output_result(text, output_file):
-    """Step 5: Output the result securely"""
+def output_result(text: str, output_file: str) -> None:
+    """Write the processed transcript to output file securely.
+
+    Sanitizes the filename and uses secure file writing to prevent path
+    traversal attacks and other security issues.
+
+    Args:
+        text: Processed transcript text to write.
+        output_file: Path to the output file (filename will be sanitized).
+
+    Raises:
+        PermissionError: If no write permission for output file.
+        OSError: If disk full or other OS error occurs.
+
+    Example:
+        >>> output_result("Processed transcript...", "output.md")
+        # Creates output.md with sanitized filename
+    """
     try:
         # Get the directory and sanitize the filename
         output_dir = (
@@ -166,8 +268,23 @@ def output_result(text, output_file):
 
 
 # Functions to address formatting inconsistencies
-def standardize_quotes(text):
-    """Step 4.5: Use Regular Expressions to standardize quotation marks"""
+def standardize_quotes(text: str) -> str:
+    r"""Standardize quotation marks using regular expressions.
+
+    Replaces single quotes with double quotes and ensures quotes are properly
+    paired throughout the text.
+
+    Args:
+        text: Text with potentially inconsistent quotation marks.
+
+    Returns:
+        Text with standardized double quotes.
+
+    Example:
+        >>> text = "He said 'hello' and she replied 'hi'"
+        >>> standardize_quotes(text)
+        'He said "hello" and she replied "hi"'
+    """
     # Replace single quotes with double quotes
     text = re.sub(r"(?<!\w)'|'(?!\w)", '"', text)
     # Ensure quotes are properly paired
@@ -175,8 +292,25 @@ def standardize_quotes(text):
     return text
 
 
-def split_long_sentences(text, max_length=50):
-    """Step 4.6: Use NLTK to split run-on sentences into shorter sentences"""
+def split_long_sentences(text: str, max_length: int = 50) -> str:
+    """Split run-on sentences into shorter chunks using NLTK.
+
+    Tokenizes text into sentences and splits any sentence longer than
+    max_length words into multiple shorter sentences.
+
+    Args:
+        text: Text potentially containing long run-on sentences.
+        max_length: Maximum number of words per sentence chunk.
+
+    Returns:
+        Text with long sentences split into shorter chunks.
+
+    Example:
+        >>> long_text = " ".join(["word"] * 100)
+        >>> result = split_long_sentences(long_text, max_length=30)
+        >>> len(result.split(".")) > 1
+        True
+    """
     # Lazy load sentence tokenizer
     sent_tokenize = get_sentence_tokenizer()
     sentences = sent_tokenize(text)
@@ -195,19 +329,52 @@ def split_long_sentences(text, max_length=50):
 
 
 # Functions to address ambiguous pronouns
-def resolve_coreferences(text):
-    """Step 4.7: Use coreference resolution to replace pronouns with their antecedents"""
+def resolve_coreferences(text: str) -> str:
+    """Resolve pronoun coreferences using spaCy coreferee.
+
+    Uses coreference resolution to replace pronouns with their antecedents,
+    making the text more explicit and easier to understand.
+
+    Args:
+        text: Text with pronouns to resolve.
+
+    Returns:
+        Text with pronouns replaced by their antecedents, or original text
+        if no coreferences detected.
+
+    Example:
+        >>> text = "John went to the store. He bought milk."
+        >>> resolve_coreferences(text)
+        'John went to the store. John bought milk.'
+    """
     # Lazy load NLP model with coreferee
     nlp = get_nlp_model_with_coreferee()
     doc = nlp(text)  # Process the text with spaCy
     if doc._.has_coref:
         resolved_text = doc._.coref_chains.resolve(text)
-        return resolved_text
+        return resolved_text  # type: ignore[no-any-return]
     return text
 
 
-def flag_ambiguous_pronouns(text):
-    """Step 4.8: Identify potentially ambiguous pronouns for manual review"""
+def flag_ambiguous_pronouns(text: str) -> list[tuple[str, int]]:
+    """Identify potentially ambiguous pronouns for manual review.
+
+    Finds pronouns that are not subjects or direct objects, which may be
+    ambiguous or difficult to resolve automatically.
+
+    Args:
+        text: Text to analyze for ambiguous pronouns.
+
+    Returns:
+        List of tuples containing (pronoun_text, token_index) for each
+        potentially ambiguous pronoun found.
+
+    Example:
+        >>> text = "She told her that it was important."
+        >>> ambiguous = flag_ambiguous_pronouns(text)
+        >>> len(ambiguous) > 0
+        True
+    """
     # Lazy load NLP model
     nlp = get_nlp_model_with_coreferee()
     doc = nlp(text)
@@ -219,7 +386,29 @@ def flag_ambiguous_pronouns(text):
 
 
 # Functions to address technical jargon
-def extract_technical_terms(text, min_count=20, min_length=3):
+def extract_technical_terms(
+    text: str, min_count: int = 20, min_length: int = 3
+) -> list[str]:
+    """Extract frequently occurring technical terms from text.
+
+    Uses spaCy NLP to identify nouns, proper nouns, adjectives, and verbs
+    that appear frequently and are not common words, likely representing
+    domain-specific terminology.
+
+    Args:
+        text: Text to extract technical terms from.
+        min_count: Minimum occurrences for a term to be considered technical.
+        min_length: Minimum character length for valid terms.
+
+    Returns:
+        List of technical terms meeting the frequency and length criteria.
+
+    Example:
+        >>> text = "API integration API authentication API endpoints" * 10
+        >>> terms = extract_technical_terms(text, min_count=5)
+        >>> "api" in terms
+        True
+    """
     # Lazy load NLP model
     nlp = get_nlp_model_with_coreferee()
     doc = nlp(text)
@@ -254,25 +443,87 @@ def extract_technical_terms(text, min_count=20, min_length=3):
     return technical_terms
 
 
-def generate_explanation(term, context):
+def generate_explanation(term: str, context: str) -> str:
+    """Generate AI explanation for a technical term using transformer model.
+
+    Uses a summarization model to generate a brief explanation of a term
+    based on its context in the transcript.
+
+    Args:
+        term: Technical term to explain.
+        context: Context in which the term appears.
+
+    Returns:
+        AI-generated explanation of the term (15-20 tokens).
+
+    Example:
+        >>> explanation = generate_explanation("API", "web service integration")
+        >>> len(explanation) > 0
+        True
+    """
     # Lazy load summarizer model
     summarizer = get_summarizer()
     prompt = f"Explain the term '{term}' in the context of: {context}"
     explanation = summarizer(prompt, max_length=20, min_length=15, do_sample=False)[0][
         "summary_text"
     ]
-    return explanation
+    return explanation  # type: ignore[no-any-return]
 
 
-def add_explanations(text, glossary):
+def add_explanations(text: str, glossary: dict[str, str]) -> str:
+    """Add inline explanations for technical terms in text.
+
+    Replaces technical terms with the format "term (explanation)" throughout
+    the text based on a provided glossary dictionary.
+
+    Args:
+        text: Text to add explanations to.
+        glossary: Dictionary mapping terms to their explanations.
+
+    Returns:
+        Text with inline explanations added for glossary terms.
+
+    Example:
+        >>> text = "The API provides data access."
+        >>> glossary = {"API": "Application Programming Interface"}
+        >>> add_explanations(text, glossary)
+        'The API (Application Programming Interface) provides data access.'
+    """
     for term, explanation in glossary.items():
         if explanation:  # Only add explanations that have been filled
             text = text.replace(term, f"{term} ({explanation})")
     return text
 
 
-def process_vtt(input_file, output_file):
-    """Main pipeline to process the .vtt file"""
+def process_vtt(input_file: str, output_file: str) -> None:
+    """Main pipeline to process VTT transcript files into enhanced Markdown.
+
+    Orchestrates the complete processing pipeline from VTT parsing through
+    cleaning, formatting, NLP enhancement, and Markdown output generation.
+
+    Pipeline stages:
+    1. Read and parse VTT file
+    2. Clean text (remove labels, timestamps, whitespace)
+    3. Format as Markdown with bullet points
+    4. Enhance with entities and topics via NLP
+    5. Standardize quotes
+    6. Split long sentences
+    7. Extract technical terms
+    8. Write formatted output
+
+    Args:
+        input_file: Path to input VTT file to process.
+        output_file: Path to output Markdown file to create.
+
+    Raises:
+        FileNotFoundError: If input VTT file doesn't exist.
+        ValueError: If input file format is invalid.
+        RuntimeError: If processing fails for any other reason.
+
+    Example:
+        >>> process_vtt("meeting.vtt", "meeting_processed.md")
+        # Creates meeting_processed.md with enhanced Markdown transcript
+    """
     try:
         # Step 1: Read the .vtt file
         text = read_vtt(input_file)
