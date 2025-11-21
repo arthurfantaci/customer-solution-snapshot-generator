@@ -31,6 +31,9 @@ uv sync --extra dev
 
 # Download spaCy model
 uv run python -m spacy download en_core_web_sm
+
+# Download NLTK data
+uv run python -c "import nltk; nltk.download('punkt', quiet=True)"
 ```
 
 ### Environment Configuration
@@ -41,9 +44,159 @@ cp snapshot_automation/.env.example snapshot_automation/.env
 # Then add your ANTHROPIC_API_KEY (required) and other API keys as needed
 ```
 
-### Running Scripts
+## Common Commands
 
-**First**, check out the examples to see what the output looks like:
+### Development Workflow
+
+```bash
+# Format code (always run before committing)
+uv run ruff format .
+
+# Check for linting issues
+uv run ruff check .
+
+# Auto-fix linting issues
+uv run ruff check --fix .
+
+# Type checking
+uv run mypy src/customer_snapshot/ --ignore-missing-imports
+
+# Security scanning
+uv run bandit -r src/
+```
+
+### Testing
+
+```bash
+# Run all tests
+uv run pytest
+
+# Run tests with coverage
+uv run pytest --cov=src --cov-report=html
+
+# Run specific test file
+uv run pytest tests/unit/test_validators.py
+
+# Run integration tests only
+uv run pytest tests/integration/ -v
+
+# Run performance tests (marked as slow)
+uv run pytest tests/integration/ -m slow -v
+```
+
+### Pre-commit Hooks
+
+```bash
+# Install pre-commit hooks (includes ruff, mypy, bandit, pydocstyle)
+uv run pre-commit install
+
+# Run manually on all files
+uv run pre-commit run --all-files
+
+# Update hooks to latest versions
+uv run pre-commit autoupdate
+```
+
+### Building and Packaging
+
+```bash
+# Build package
+uv run python -m build
+
+# Check package integrity
+twine check dist/*
+```
+
+## Architecture
+
+### Dual Architecture: Modern Package + Legacy Scripts
+
+The project has two parallel implementations that serve different purposes:
+
+1. **`src/customer_snapshot/`** - Modern, well-structured Python package
+   - Proper error handling, type hints, and comprehensive docstrings
+   - Memory optimization and monitoring features
+   - Used for production-grade implementations
+
+2. **`snapshot_automation/`** - Legacy automation scripts
+   - Quick prototyping and experimentation
+   - Contains the actual working processors with hardcoded paths
+   - **Important**: All executable scripts are in this directory
+
+### Core Processing Flow
+
+```
+VTT File → Parser → Text Cleaner → NLP Processor → AI Enhancement → Formatted Output
+                                        ↓
+                                  Vector Store (FAISS)
+                                        ↓
+                                    Q&A System
+```
+
+### Key Modules
+
+#### Main Package (`src/customer_snapshot/`)
+
+- **core/processor.py**: Main `TranscriptProcessor` class with decorators for error tracking and memory profiling
+- **core/nlp_engine.py**: NLP processing using spaCy and NLTK
+- **io/vtt_reader.py**: VTT file parsing and validation
+- **io/output_writer.py**: HTML/Markdown output generation
+- **utils/memory_optimizer.py**: Memory optimization for large files
+- **monitoring/**: System monitoring, health checks, error tracking
+- **ai/**: AI model integrations and prompts
+
+#### Legacy Automation (`snapshot_automation/`)
+
+**Main Processors** (these are what you actually run):
+- **vtt_to_html_processor.py**: VTT → HTML with NLP analysis
+- **vtt_to_markdown_processor.py**: VTT → Markdown with entities
+- **converter.py**: Simple VTT → Markdown converter
+
+**Supporting Modules**:
+- **transcript_pipeline.py**: Five-stage pipeline (read_vtt → clean_text → improve_formatting → enhance_with_nlp → output)
+- **model_loaders.py**: Lazy loading utilities with `@lru_cache` decorators
+  - `get_nlp_model()`: Loads spaCy models on-demand
+  - `get_sentence_tokenizer()`: Loads NLTK punkt tokenizer
+  - `get_summarization_pipeline()`: Loads transformers models
+- **transcript_parallel.py**: RAG implementation using FAISS and VoyageAI embeddings
+- **transcript_tools.py**: LangChain ReAct agent with web search (Tavily) and calculation tools
+
+### Lazy Loading Architecture
+
+All models use lazy loading to improve startup time (50x faster):
+- Models imported via `model_loaders.py` functions, not direct imports
+- `@lru_cache` ensures models load once and are reused
+- Import time: ~0.1s vs ~5s without lazy loading
+- Memory savings: 500MB+ when models not used
+
+### Document Generation
+
+Generated Customer Solution Snapshots include 11 sections:
+1. Customer Information
+2. Background
+3. Solution
+4. Engagement/Implementation Details
+5. Results and Achievements
+6. Adoption and Usage
+7. Financial Impact
+8. Long-Term Impact
+9. Visuals
+10. Additional Commentary
+11. Executive Summary
+
+### Template Files
+
+Located in `snapshot_automation/template_files/`:
+- **Customer Solution Snapshot Template.docx**: Main document template
+- **quest_enterprises_snapshot_template.docx**: Example template
+- **System_Prompt_Customer_Success_Snapshot.txt**: AI prompt for section generation
+- **All_Prompt_Details.txt**: Complete prompt documentation
+
+## Running Scripts
+
+**Important**: All main processing scripts have hardcoded file paths that need updating before running. Look for paths like `C:/Users/DQA/...` and update them to your local paths.
+
+**First**, check examples:
 ```bash
 ls snapshot_automation/examples/  # View example inputs and outputs
 cat snapshot_automation/examples/README.md  # Read examples documentation
@@ -61,154 +214,54 @@ uv run python snapshot_automation/transcript_tools.py     # LangChain agent for 
 uv run python snapshot_automation/converter.py            # Simple VTT → Markdown
 ```
 
-**Note**: All scripts have hardcoded file paths that need updating before running.
+## CI/CD Pipeline
 
-## Code Quality Tools
+The `.github/workflows/ci.yml` defines a comprehensive CI/CD pipeline:
 
-### Formatting and Linting
+1. **Test Job**: Runs on Python 3.8, 3.9, 3.10, 3.11
+   - Installs dependencies via `uv sync --extra dev`
+   - Downloads spaCy and NLTK models
+   - Runs linting, type checking, security scanning
+   - Runs pytest with coverage
+   - Uploads coverage to Codecov
 
-```bash
-# Format code
-uv run ruff format .
+2. **Quality Job**: Additional code quality checks
+   - Ruff formatting and linting
+   - Bandit security analysis
+   - MyPy type checking
 
-# Check for linting issues
-uv run ruff check .
+3. **Security Job**: Comprehensive security scanning
+   - Trivy vulnerability scanner
+   - Safety dependency checks
+   - Semgrep static analysis
 
-# Auto-fix linting issues
-uv run ruff check --fix .
-```
+4. **Build Job**: Package building
+   - Builds wheel and source distribution
+   - Validates with twine
 
-### Pre-commit Hooks
-
-```bash
-# Install pre-commit hooks
-uv run pre-commit install
-
-# Run manually
-uv run pre-commit run --all-files
-```
-
-### Testing
-
-```bash
-# Run all tests
-uv run pytest
-
-# Run with coverage
-uv run pytest --cov=src --cov-report=html
-
-# Run specific test file
-uv run pytest tests/unit/test_validators.py
-```
-
-## Architecture
-
-### Core Processing Flow
-1. **Input**: VTT transcript files from customer meetings
-2. **Processing Pipeline**:
-   - Parse VTT → Clean text → Extract entities/topics → Generate structured output
-   - Uses spaCy for NLP, NLTK for tokenization, transformers for summarization
-   - **Lazy Loading**: Models load on-demand for fast startup and memory efficiency
-3. **Output**: HTML/Markdown documents structured as Customer Solution Snapshots
-
-### Key Modules
-
-#### Main Package (`src/customer_snapshot/`)
-- **core/**: Core processing logic (processors, NLP engine, validators)
-- **io/**: Input/output handlers
-- **utils/**: Utilities (config, memory optimization, file handling)
-- **monitoring/**: System monitoring, health checks, error tracking
-- **ai/**: AI model integrations and prompts
-
-#### Legacy Automation (`snapshot_automation/`)
-- **vtt_to_html_processor.py**: VTT → HTML with NLP analysis
-- **vtt_to_markdown_processor.py**: VTT → Markdown with entities
-- **transcript_pipeline.py**: Core transcript processing
-- **model_loaders.py**: Lazy loading for ML models (spaCy, NLTK, transformers)
-- **transcript_parallel.py**: RAG implementation using FAISS and VoyageAI embeddings
-- **transcript_tools.py**: LangChain ReAct agent with web search and calculation tools
-
-### Data Flow
-```
-VTT File → Parser → Text Cleaner → NLP Processor → AI Enhancement → Formatted Output
-                                        ↓
-                                  Vector Store (FAISS)
-                                        ↓
-                                    Q&A System
-```
-
-### Customer Solution Snapshot Structure
-Generated documents include 11 sections:
-1. Customer Information
-2. Background
-3. Solution
-4. Engagement/Implementation Details
-5. Results and Achievements
-6. Adoption and Usage
-7. Financial Impact
-8. Long-Term Impact
-9. Visuals
-10. Additional Commentary
-11. Executive Summary
-
-## Performance Features
-
-### Lazy Loading
-All transcript processors use lazy loading for ML models:
-- **Fast imports**: ~0.1s instead of ~5s
-- **Memory efficient**: 500MB+ savings when models not used
-- **On-demand loading**: Models load automatically when functions are called
-
-### Caching
-- **LRU caching**: Models cached after first load
-- **Smart NLTK data**: Automatic download and caching
+5. **Integration Job**: Integration and performance tests
 
 ## Important Development Notes
 
-1. **Modern Tooling**: Project uses `uv` for dependency management and `ruff` for linting/formatting. All configurations are in `pyproject.toml`.
+1. **Modern Tooling**: All configurations are in `pyproject.toml`. Use `uv` for dependency management and `ruff` for linting/formatting.
 
-2. **File Path Updates Required**: All scripts contain hardcoded file paths (e.g., `C:/Users/DQA/...`) that must be updated to your local paths.
+2. **File Paths**: Legacy scripts in `snapshot_automation/` contain hardcoded Windows paths that must be updated.
 
 3. **API Keys Required**:
    - `ANTHROPIC_API_KEY` (always required)
-   - `VOYAGEAI_API_KEY` (for transcript_parallel.py)
-   - `TAVILY_API_KEY` (for transcript_tools.py)
+   - `VOYAGEAI_API_KEY` (optional, for transcript_parallel.py)
+   - `TAVILY_API_KEY` (optional, for transcript_tools.py)
 
-4. **Test Suite**: Project has pytest-based tests. Run with `uv run pytest`. Current coverage: 27%.
+4. **Test Coverage**: Current coverage is 27%. Coverage target in `pyproject.toml` is 80%.
 
 5. **VTT File Format**: Input files must be valid WebVTT format with timestamps and speaker labels.
 
-6. **Template Files**: Document templates and AI prompts are in `snapshot_automation/template_files/`
-
-## Project Structure
-
-```
-customer-solution-snapshot-generator/
-├── src/customer_snapshot/     # Main package (modern, well-structured)
-│   ├── ai/                    # AI integrations
-│   ├── core/                  # Core processing
-│   ├── io/                    # Input/output
-│   ├── monitoring/            # System monitoring
-│   └── utils/                 # Utilities
-├── snapshot_automation/       # Legacy automation scripts
-│   ├── model_loaders.py       # Lazy loading utilities
-│   ├── transcript_pipeline.py # Core pipeline
-│   ├── vtt_to_html_processor.py
-│   ├── vtt_to_markdown_processor.py
-│   └── examples/              # Example inputs/outputs
-├── tests/                     # Test suites
-│   ├── unit/
-│   ├── integration/
-│   └── manual/
-├── scripts/                   # Utility scripts
-│   ├── benchmarking/
-│   ├── deployment/
-│   ├── monitoring/
-│   └── optimization/
-├── pyproject.toml             # Project configuration
-├── uv.lock                    # Dependency lock file
-└── .pre-commit-config.yaml    # Git hooks
-```
+6. **Pre-commit Hooks**: The project uses extensive pre-commit hooks including:
+   - ruff (linting and formatting)
+   - mypy (type checking)
+   - bandit (security)
+   - pydocstyle (docstring conventions - Google style)
+   - detect-secrets (secret scanning)
 
 ## Adding Dependencies
 
@@ -219,26 +272,27 @@ uv add package-name
 # Add a development dependency
 uv add --dev package-name
 
-# Update dependencies
+# Add RAG-specific dependencies
+uv sync --extra rag
+
+# Update all dependencies
 uv sync
 
 # Lock dependencies
 uv lock
 ```
 
-## Git Workflow
+## Code Style Guidelines
 
-```bash
-# Format code before committing
-uv run ruff format .
+- **Docstrings**: Google style (enforced by pydocstyle)
+- **Type hints**: Required for all new code (checked by mypy with `--strict`)
+- **Line length**: 88 characters (Black-compatible)
+- **Import order**: Handled by ruff's isort integration
+- **Security**: No secrets in code (checked by detect-secrets)
 
-# Check for issues
-uv run ruff check --fix .
+## Performance Considerations
 
-# Commit (pre-commit hooks will run automatically)
-git add .
-git commit -m "Your message"
-
-# Push
-git push
-```
+1. **Large Files**: The `TranscriptProcessor` automatically applies memory optimizations for files > 10MB
+2. **Model Loading**: Always use lazy loading functions from `model_loaders.py`
+3. **Memory Monitoring**: Available via `MemoryOptimizer` class with context managers
+4. **Chunking**: Not yet implemented but planned for very large transcripts
