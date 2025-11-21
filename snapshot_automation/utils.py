@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 def validate_file_path(
-    file_path: Union[str, Path], allowed_extensions: Optional[list] = None
+    file_path: Union[str, Path], allowed_extensions: Optional[list[str]] = None
 ) -> Path:
     """
     Validate file path before use for security.

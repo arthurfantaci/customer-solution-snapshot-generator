@@ -6,14 +6,16 @@ to improve import times and reduce memory usage when models aren't needed.
 """
 
 import logging
+from collections.abc import Callable
 from functools import lru_cache
+from typing import Any
 
 
 logger = logging.getLogger(__name__)
 
 
 @lru_cache(maxsize=1)
-def get_nlp_model(model_name: str = "en_core_web_sm"):
+def get_nlp_model(model_name: str = "en_core_web_sm") -> Any:
     """
     Lazy load spaCy NLP model.
 
@@ -56,7 +58,7 @@ def get_nlp_model(model_name: str = "en_core_web_sm"):
 
 
 @lru_cache(maxsize=1)
-def get_nlp_model_with_coreferee(model_name: str = "en_core_web_sm"):
+def get_nlp_model_with_coreferee(model_name: str = "en_core_web_sm") -> Any:
     """
     Lazy load spaCy NLP model with coreferee pipeline component.
 
@@ -89,7 +91,7 @@ def get_nlp_model_with_coreferee(model_name: str = "en_core_web_sm"):
 
 
 @lru_cache(maxsize=1)
-def get_summarizer(model_name: str = "facebook/bart-large-cnn"):
+def get_summarizer(model_name: str = "facebook/bart-large-cnn") -> Any:
     """
     Lazy load transformer summarization model.
 
@@ -115,7 +117,7 @@ def get_summarizer(model_name: str = "facebook/bart-large-cnn"):
 
 
 @lru_cache(maxsize=1)
-def ensure_nltk_data():
+def ensure_nltk_data() -> bool:
     """
     Ensure NLTK data is downloaded.
 
@@ -141,7 +143,7 @@ def ensure_nltk_data():
             return False
 
 
-def get_sentence_tokenizer():
+def get_sentence_tokenizer() -> Callable[[str], list[str]]:
     """
     Get NLTK sentence tokenizer (with data download if needed).
 
@@ -159,7 +161,7 @@ def get_sentence_tokenizer():
 
 
 # Pre-warm functions (optional - call these in background if desired)
-def preload_all_models():
+def preload_all_models() -> None:
     """
     Preload all models in background.
 
@@ -180,7 +182,7 @@ def preload_all_models():
         logger.warning(f"Some models failed to pre-load: {e}")
 
 
-def clear_model_cache():
+def clear_model_cache() -> None:
     """
     Clear all cached models to free memory.
 
