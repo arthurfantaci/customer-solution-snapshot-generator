@@ -1,12 +1,41 @@
-def vtt_to_md(transcript, output_path):
-    """
-    Convert a webttv meeting transcript .vtt file to a .md file and remove redundant information
+"""Simple VTT to Markdown converter for meeting transcripts.
 
-    Parameters:
-    - transcript (str): Path to the .vtt file in the docs folder
+This module provides a straightforward conversion utility that transforms WebVTT
+transcript files into Markdown format, grouping dialogues by speaker with timestamps.
+"""
+
+
+def vtt_to_md(transcript: str, output_path: str) -> str:
+    """Convert a WebVTT meeting transcript file to Markdown format.
+
+    Processes a .vtt file to create a Markdown document with speaker-grouped
+    dialogues. Each speaker's continuous dialogue is consolidated with start
+    and end timestamps. Removes "WEBVTT" headers and redundant speaker labels.
+
+    Args:
+        transcript: Path to the input .vtt file to convert.
+        output_path: Intended output path (note: currently unused, see Returns).
 
     Returns:
-    - raw_md (str): Path to the raw .md file of the meeting transcript
+        The output_path parameter value (note: actual file is written to
+        transcript path with .md extension).
+
+    Raises:
+        FileNotFoundError: If the transcript file doesn't exist.
+        UnicodeDecodeError: If the file encoding is not UTF-8.
+        IOError: If file cannot be read or written.
+
+    Example:
+        >>> output = vtt_to_md("meeting.vtt", "meeting.md")
+        Reading from meeting.vtt
+        Writing to meeting.md
+        Successfully converted meeting.vtt to meeting.md
+        >>> print(output)
+        meeting.md
+
+    Note:
+        This function has a minor inconsistency: it creates the output file
+        at transcript.replace('.vtt', '.md') but returns the output_path parameter.
     """
     vtt_path = transcript
 
