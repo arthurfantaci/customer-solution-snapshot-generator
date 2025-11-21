@@ -1,4 +1,18 @@
+"""RAG-based transcript Q&A system using FAISS, VoyageAI embeddings, and Claude.
+
+This module implements a Retrieval-Augmented Generation (RAG) system for
+answering questions about meeting transcripts. It combines:
+- FAISS vector database for efficient similarity search
+- VoyageAI embeddings (voyage-law-2 model) for semantic text representation
+- Anthropic Claude (claude-3-5-sonnet) for natural language generation
+- LangChain for document loading, text splitting, and retrieval
+
+The system loads transcript text, splits it into chunks, creates vector embeddings,
+and uses semantic search to retrieve relevant context for answering questions.
+"""
+
 import os
+from typing import Any
 
 from anthropic import Anthropic
 from dotenv import load_dotenv
@@ -31,7 +45,28 @@ client = Anthropic(api_key=anthropic_api_key)
 # Helper functions for printing docs
 
 
-def pretty_print_docs(docs):
+def pretty_print_docs(docs: list[Any]) -> None:
+    """Pretty print a list of LangChain document objects.
+
+    Formats and displays retrieved documents with separators and numbering
+    for easy reading and debugging of RAG retrieval results.
+
+    Args:
+        docs: List of LangChain Document objects with page_content attributes.
+
+    Example:
+        >>> docs = retriever.invoke("What was discussed?")
+        >>> pretty_print_docs(docs)
+        Document 1:
+
+        [content of first document]
+
+        ------------------------------------...
+
+        Document 2:
+
+        [content of second document]
+    """
     print(
         f"\n{'-' * 100}\n\n".join(
             [f"Document {i + 1}:\n\n" + d.page_content for i, d in enumerate(docs)]
@@ -81,13 +116,36 @@ relevant_docs = retriever.invoke(solution_prompt)
 
 
 # Example usage for Jack
-def get_response(prompt):
+def get_response(prompt: str) -> list[Any]:
+    """Get a response from Claude AI based on the provided prompt.
+
+    Sends a prompt to Claude API and returns the generated response content.
+    Uses claude-3-5-sonnet-20240620 model with a 1000 token limit.
+
+    Args:
+        prompt: The input prompt/question to send to Claude. Should include
+            both the query and any relevant context documents for RAG.
+
+    Returns:
+        List of content blocks from Claude's response. Typically contains
+        text blocks with the generated answer.
+
+    Raises:
+        anthropic.APIError: If the API request fails.
+        anthropic.AuthenticationError: If API key is invalid.
+
+    Example:
+        >>> prompt = "What is the customer's main challenge?"
+        >>> response = get_response(prompt)
+        >>> print(response)
+        [TextBlock(text='The main challenge was...', type='text')]
+    """
     message = client.messages.create(
         model="claude-3-5-sonnet-20240620",
         max_tokens=1000,
         messages=[{"role": "user", "content": prompt}],
     )
-    return message.content
+    return message.content  # type: ignore[no-any-return]
 
 
 # Combine the query and the relevant document contents
