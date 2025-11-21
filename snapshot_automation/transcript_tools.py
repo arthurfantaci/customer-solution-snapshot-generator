@@ -1,4 +1,17 @@
-# Docs: https://python.langchain.com/v0.1/docs/modules/tools/custom_tools/
+"""LangChain agent system with custom tools for web search and calculations.
+
+This module demonstrates creating a ReAct-style agent using LangChain with:
+- Custom tools (web search via Tavily, number multiplication)
+- Claude 3.5 Sonnet as the reasoning model
+- LangChain's AgentExecutor for tool orchestration
+
+The agent can:
+1. Search for company information using Tavily web search API
+2. Perform numerical calculations (multiplication example)
+3. Chain multiple tool calls together to answer complex queries
+
+Reference: https://python.langchain.com/v0.1/docs/modules/tools/custom_tools/
+"""
 
 # Import necessary libraries
 import os
@@ -17,10 +30,23 @@ load_dotenv()
 
 
 class SimpleSearchInput(BaseModel):
+    """Input schema for simple search tool.
+
+    Attributes:
+        query: Search query string to send to Tavily API.
+    """
+
     query: str = Field(description="should be a search query")
 
 
 class MultiplyNumbersArgs(BaseModel):
+    """Input schema for multiply numbers tool.
+
+    Attributes:
+        x: First number to multiply.
+        y: Second number to multiply.
+    """
+
     x: float = Field(description="First number to multiply")
     y: float = Field(description="Second number to multiply")
 
@@ -29,6 +55,19 @@ class MultiplyNumbersArgs(BaseModel):
 
 
 class SimpleSearchTool(BaseTool):
+    """LangChain tool for web search using Tavily API.
+
+    This tool enables the agent to search the web for information about
+    companies, topics, or general queries. It uses Tavily's search API
+    which requires a TAVILY_API_KEY environment variable.
+
+    Attributes:
+        name: Tool identifier used by the agent ("simple_search").
+        description: Natural language description for the LLM to understand
+            when to use this tool.
+        args_schema: Pydantic model defining the input structure.
+    """
+
     name = "simple_search"
     description = "useful for when you need to answer questions about specific companies or topics"
     args_schema: type[BaseModel] = SimpleSearchInput
@@ -37,7 +76,20 @@ class SimpleSearchTool(BaseTool):
         self,
         query: str,
     ) -> str:
-        """Use the tool."""
+        """Execute web search query using Tavily API.
+
+        Args:
+            query: Search query string.
+
+        Returns:
+            Formatted string with search results from Tavily.
+
+        Example:
+            >>> tool = SimpleSearchTool()
+            >>> results = tool._run("LangChain latest updates")
+            >>> "Search results for:" in results
+            True
+        """
         from tavily import TavilyClient
 
         api_key = os.getenv("TAVILY_API_KEY")
@@ -48,6 +100,19 @@ class SimpleSearchTool(BaseTool):
 
 # Custom tool with custom input and output
 class MultiplyNumbersTool(BaseTool):
+    """LangChain tool for multiplying two numbers.
+
+    This tool demonstrates a simple calculation capability for the agent.
+    It can be used when the LLM needs to perform numerical calculations
+    as part of answering a user's query.
+
+    Attributes:
+        name: Tool identifier used by the agent ("multiply_numbers").
+        description: Natural language description for the LLM to understand
+            when to use this tool.
+        args_schema: Pydantic model defining the input structure (two floats).
+    """
+
     name = "multiply_numbers"
     description = "useful for multiplying two numbers"
     args_schema: type[BaseModel] = MultiplyNumbersArgs
@@ -57,7 +122,21 @@ class MultiplyNumbersTool(BaseTool):
         x: float,
         y: float,
     ) -> str:
-        """Use the tool."""
+        """Multiply two numbers and return formatted result.
+
+        Args:
+            x: First number to multiply.
+            y: Second number to multiply.
+
+        Returns:
+            Human-readable string with the multiplication result.
+
+        Example:
+            >>> tool = MultiplyNumbersTool()
+            >>> result = tool._run(10.0, 20.0)
+            >>> "200" in result
+            True
+        """
         result = x * y
         return f"The product of {x} and {y} is {result}"
 
