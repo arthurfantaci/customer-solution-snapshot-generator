@@ -125,7 +125,7 @@ from src.customer_snapshot.monitoring.error_tracker import ErrorContext
 
 context = ErrorContext(
     user_id="user123",
-    session_id="session456", 
+    session_id="session456",
     function_name="process_file",
     module_name="processor",
     file_path="/app/processor.py",
@@ -331,7 +331,7 @@ def external_service_call():
 ```python
 from src.customer_snapshot.utils.error_handling import (
     handle_file_operations,
-    handle_network_operations, 
+    handle_network_operations,
     handle_api_calls,
     handle_parsing_operations
 )
@@ -343,7 +343,7 @@ def read_large_file(filepath):
         return f.read()
 
 # Network operations with retry and timeout
-@handle_network_operations  
+@handle_network_operations
 def download_data(url):
     response = requests.get(url)
     return response.json()
@@ -585,19 +585,19 @@ The test suite covers:
 # Test error tracking with context
 def test_error_with_context():
     error_tracker = get_error_tracker()
-    
+
     context = ErrorContext(
         function_name="test_function",
         additional_data={"test_key": "test_value"}
     )
-    
+
     error_record = error_tracker.track_error(
         error_message="Test error",
-        exception_type="TestError", 
+        exception_type="TestError",
         stack_trace="test stack trace",
         context=context
     )
-    
+
     assert error_record.context.function_name == "test_function"
     assert error_record.context.additional_data["test_key"] == "test_value"
 ```
@@ -659,7 +659,7 @@ Error data is automatically sanitized:
 # Configure data sanitization
 error_tracker.sanitize_patterns = [
     r'api_key=\w+',
-    r'password=\w+', 
+    r'password=\w+',
     r'token=\w+',
     r'\b\d{4}-\d{4}-\d{4}-\d{4}\b'  # Credit card numbers
 ]
@@ -672,7 +672,7 @@ error_tracker.sanitize_patterns = [
 def secure_export(user_role):
     if user_role != 'admin':
         raise PermissionError("Only admins can export error data")
-    
+
     return error_tracker.export_errors("secure_export.json")
 ```
 

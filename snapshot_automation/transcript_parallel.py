@@ -1,11 +1,12 @@
 import os
+
+from anthropic import Anthropic
+from dotenv import load_dotenv
 from langchain_community.document_loaders import TextLoader
 from langchain_community.vectorstores import FAISS
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_voyageai import VoyageAIEmbeddings
-from anthropic import Anthropic
 
-from dotenv import load_dotenv
 
 load_dotenv()
 
@@ -22,19 +23,21 @@ else:
 
 # Ensure the API key is available
 if not anthropic_api_key:
-	raise ValueError("ANTHROPIC_API_KEY not found in .env file")
+    raise ValueError("ANTHROPIC_API_KEY not found in .env file")
 
 # Initialize the Anthropic client with the loaded API key
 client = Anthropic(api_key=anthropic_api_key)
 
 # Helper functions for printing docs
 
+
 def pretty_print_docs(docs):
     print(
         f"\n{'-' * 100}\n\n".join(
-        [f"Document {i+1}:\n\n" + d.page_content for i, d in enumerate(docs)]
+            [f"Document {i + 1}:\n\n" + d.page_content for i, d in enumerate(docs)]
         )
     )
+
 
 # Use an absolute path
 file_path = os.path.join(os.path.dirname(__file__), "vtt_files/plain_text_output.txt")
@@ -48,14 +51,14 @@ texts = text_splitter.split_documents(documents)
 
 retriever = FAISS.from_documents(
     texts, VoyageAIEmbeddings(voyage_api_key=voyage_api_key, model="voyage-law-2")
-).as_retriever(search_kwargs={"k":5})
+).as_retriever(search_kwargs={"k": 5})
 
 background_prompt = "Your task is to describe the Customer's initial problem or challenge before using Qlik's products and services. This description will set the stage for the narrative."
 solution_prompt = "Detail the specific product/service from Qlik/Talend that was implemented. Explain how it was introduced and applied to the customer's problem."
 
 
 relevant_docs = retriever.invoke(solution_prompt)
-#pretty_print_docs(relevant_docs)
+# pretty_print_docs(relevant_docs)
 
 # # Example Message
 # message = client.messages.create(
@@ -79,14 +82,13 @@ relevant_docs = retriever.invoke(solution_prompt)
 
 # Example usage for Jack
 def get_response(prompt):
-	message = client.messages.create(
-		model="claude-3-5-sonnet-20240620",
-		max_tokens=1000,
-		messages=[
-			{"role": "user", "content": prompt}
-		]
-	)
-	return message.content
+    message = client.messages.create(
+        model="claude-3-5-sonnet-20240620",
+        max_tokens=1000,
+        messages=[{"role": "user", "content": prompt}],
+    )
+    return message.content
+
 
 # Combine the query and the relevant document contents
 combined_input = (
@@ -94,8 +96,7 @@ combined_input = (
     + solution_prompt
     + "\n\nRelevant Documents:\n"
     + "\n\n".join([doc.page_content for doc in relevant_docs])
-	+ "\n\nPlease provide an answer based ONLY on the provided documents. If the answer is not found in the documents, respond with 'I'm not sure'."
-    
+    + "\n\nPlease provide an answer based ONLY on the provided documents. If the answer is not found in the documents, respond with 'I'm not sure'."
 )
 
 print(combined_input)

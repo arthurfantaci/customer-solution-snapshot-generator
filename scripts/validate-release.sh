@@ -46,7 +46,7 @@ if command -v docker &> /dev/null; then
     else
         echo "⚠️  Docker Hub image not found"
     fi
-    
+
     # GitHub Container Registry
     if docker pull ghcr.io/arthurfantaci/customer-snapshot-generator:$VERSION &> /dev/null; then
         echo "✅ GitHub Container Registry image available"
@@ -80,7 +80,7 @@ source test_env/bin/activate
 echo "   Testing local installation..."
 if pip install -q /path/to/dist/customer_snapshot-*.whl &> /dev/null; then
     echo "✅ Package installation successful"
-    
+
     # Test import
     if python3 -c "import customer_snapshot; print('✅ Package import successful')" &> /dev/null; then
         :

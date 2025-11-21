@@ -58,7 +58,7 @@ OSError: [E050] Can't find model 'en_core_web_sm'
 1. **Download model manually:**
    ```bash
    python -m spacy download en_core_web_sm
-   
+
    # If that fails, try direct download:
    pip install https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.7.0/en_core_web_sm-3.7.0-py3-none-any.whl
    ```
@@ -90,14 +90,14 @@ LookupError: NLTK data not found
    ```python
    import nltk
    import ssl
-   
+
    try:
        _create_unverified_https_context = ssl._create_unverified_context
    except AttributeError:
        pass
    else:
        ssl._create_default_https_context = _create_unverified_https_context
-   
+
    nltk.download('punkt')
    ```
 
@@ -115,7 +115,7 @@ Error: ANTHROPIC_API_KEY environment variable not set
 1. **Set environment variable:**
    ```bash
    export ANTHROPIC_API_KEY="your-key-here"
-   
+
    # Make it permanent (add to ~/.bashrc or ~/.zshrc)
    echo 'export ANTHROPIC_API_KEY="your-key-here"' >> ~/.bashrc
    ```
@@ -145,7 +145,7 @@ Warning: Configuration file not found, using defaults
    api:
      anthropic_api_key: ${ANTHROPIC_API_KEY}
      model: claude-3-sonnet-20240229
-   
+
    processing:
      chunk_size: 500
      enable_caching: true
@@ -189,7 +189,7 @@ ValueError: Invalid VTT format: File does not start with 'WEBVTT'
    ```bash
    # From SRT to VTT
    ffmpeg -i input.srt output.vtt
-   
+
    # From plain text (manual VTT creation needed)
    customer-snapshot convert text-to-vtt input.txt output.vtt
    ```
@@ -259,7 +259,7 @@ UnicodeDecodeError: 'utf-8' codec can't decode byte
    ```bash
    # For large files
    customer-snapshot process file.vtt --chunk-size 2000
-   
+
    # For small files
    customer-snapshot process file.vtt --chunk-size 1000
    ```
@@ -459,7 +459,7 @@ docker: Error response from daemon: container exited with non-zero status
    ```bash
    # Make files readable
    chmod -R 755 ./input/
-   
+
    # Or run with user ID
    docker run --user $(id -u):$(id -g) -v $(pwd):/data \
      arthurfantaci/customer-snapshot-generator:latest
@@ -490,7 +490,7 @@ docker: container killed by OOM killer
    services:
      processor:
        mem_limit: 4g
-       
+
    # Or command line
    docker run -m 4g arthurfantaci/customer-snapshot-generator:latest
    ```
@@ -618,10 +618,10 @@ OSError: [Errno 28] No space left on device
    ```bash
    # Fix API connectivity
    export ANTHROPIC_API_KEY="correct-key"
-   
+
    # Fix NLP models
    python -m spacy download en_core_web_sm
-   
+
    # Fix filesystem permissions
    chmod 755 /app/data/
    ```

@@ -2,7 +2,8 @@
 Input/Output modules for file handling and data processing.
 """
 
-from .vtt_reader import VTTReader
 from .output_writer import OutputWriter
+from .vtt_reader import VTTReader
 
-__all__ = ["VTTReader", "OutputWriter"]
+
+__all__ = ["OutputWriter", "VTTReader"]

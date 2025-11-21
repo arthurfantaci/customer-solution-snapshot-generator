@@ -1,15 +1,19 @@
 """
 Pytest configuration and shared fixtures.
 """
+
 import os
-import tempfile
-from pathlib import Path
-from typing import Generator
-import pytest
-from unittest.mock import Mock
 
 # Add src to Python path for testing
 import sys
+import tempfile
+from collections.abc import Generator
+from pathlib import Path
+from unittest.mock import Mock
+
+import pytest
+
+
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 from customer_snapshot.utils.config import Config
@@ -60,17 +64,17 @@ def test_config(temp_dir: Path) -> Config:
     os.environ["VOYAGEAI_API_KEY"] = "test_voyage_key"
     os.environ["MAX_FILE_SIZE"] = "1048576"  # 1MB for testing
     os.environ["DEBUG"] = "true"
-    
+
     config = Config()
     # Override directories to use temp directory
     config.data_dir = temp_dir / "data"
     config.input_dir = temp_dir / "data" / "input"
     config.output_dir = temp_dir / "data" / "output"
     config.templates_dir = temp_dir / "data" / "templates"
-    
+
     # Create test directories
     config._ensure_directories()
-    
+
     return config
 
 
@@ -89,25 +93,25 @@ def mock_spacy_nlp():
     """Mock spaCy NLP pipeline for testing."""
     mock_nlp = Mock()
     mock_doc = Mock()
-    
+
     # Mock entities
     mock_entity = Mock()
     mock_entity.text = "Qlik Cloud Platform"
     mock_entity.label_ = "PRODUCT"
     mock_doc.ents = [mock_entity]
-    
+
     # Mock noun chunks
     mock_chunk = Mock()
     mock_chunk.text = "data analytics"
     mock_doc.noun_chunks = [mock_chunk]
-    
+
     # Mock tokens
     mock_token = Mock()
     mock_token.is_stop = False
     mock_token.pos_ = "NOUN"
     mock_token.lemma_ = "analytics"
     mock_doc.__iter__ = lambda self: iter([mock_token])
-    
+
     mock_nlp.return_value = mock_doc
     return mock_nlp
 
@@ -144,8 +148,12 @@ def cleanup_env():
     yield
     # Clean up test environment variables
     test_vars = [
-        "ANTHROPIC_API_KEY", "VOYAGEAI_API_KEY", "MAX_FILE_SIZE", 
-        "DEBUG", "LOG_LEVEL", "CHUNK_SIZE"
+        "ANTHROPIC_API_KEY",
+        "VOYAGEAI_API_KEY",
+        "MAX_FILE_SIZE",
+        "DEBUG",
+        "LOG_LEVEL",
+        "CHUNK_SIZE",
     ]
     for var in test_vars:
         if var in os.environ:

@@ -47,23 +47,23 @@ EOF
 # Validate environment
 validate_environment() {
     log_info "Validating environment configuration..."
-    
+
     # Check required environment variables
     if [[ -z "${ANTHROPIC_API_KEY:-}" ]]; then
         log_warn "ANTHROPIC_API_KEY not set. Some features may not work."
     else
         log_success "ANTHROPIC_API_KEY is configured"
     fi
-    
+
     # Check optional environment variables
     if [[ -n "${VOYAGEAI_API_KEY:-}" ]]; then
         log_success "VOYAGEAI_API_KEY is configured"
     fi
-    
+
     if [[ -n "${TAVILY_API_KEY:-}" ]]; then
         log_success "TAVILY_API_KEY is configured"
     fi
-    
+
     # Validate log level
     case "${LOG_LEVEL}" in
         DEBUG|INFO|WARNING|ERROR|CRITICAL)
@@ -79,23 +79,23 @@ validate_environment() {
 # Setup directories
 setup_directories() {
     log_info "Setting up data directories..."
-    
+
     # Ensure directories exist and have correct permissions
     directories=(
         "/app/data/input"
-        "/app/data/output" 
+        "/app/data/output"
         "/app/data/templates"
         "/app/data/logs"
         "/app/data/cache"
     )
-    
+
     for dir in "${directories[@]}"; do
         if [[ ! -d "$dir" ]]; then
             mkdir -p "$dir"
             log_info "Created directory: $dir"
         fi
     done
-    
+
     # Set proper permissions
     chmod 755 /app/data/*
     log_success "Directory setup completed"
@@ -104,7 +104,7 @@ setup_directories() {
 # Initialize application
 initialize_app() {
     log_info "Initializing application..."
-    
+
     # Check if models are available
     if python -c "import spacy; spacy.load('en_core_web_sm')" 2>/dev/null; then
         log_success "spaCy model loaded successfully"
@@ -112,7 +112,7 @@ initialize_app() {
         log_warn "spaCy model not found, downloading..."
         python -m spacy download en_core_web_sm
     fi
-    
+
     # Check NLTK data
     if python -c "import nltk; nltk.data.find('tokenizers/punkt')" 2>/dev/null; then
         log_success "NLTK data available"
@@ -120,7 +120,7 @@ initialize_app() {
         log_warn "NLTK data not found, downloading..."
         python -c "import nltk; nltk.download('punkt', quiet=True)"
     fi
-    
+
     # Test configuration
     if python -c "from customer_snapshot.utils.config import Config; Config.get_default().validate()" 2>/dev/null; then
         log_success "Configuration validation passed"
@@ -133,7 +133,7 @@ initialize_app() {
 # Health check function
 health_check() {
     log_info "Running health check..."
-    
+
     # Check if the CLI is working
     if customer-snapshot config-info >/dev/null 2>&1; then
         log_success "CLI health check passed"
@@ -147,7 +147,7 @@ health_check() {
 # Run system test
 run_system_test() {
     log_info "Running system test..."
-    
+
     # Create a temporary test file
     cat > /tmp/test.vtt << 'EOF'
 WEBVTT
@@ -158,7 +158,7 @@ Test Speaker: This is a system test transcript.
 00:00:05.000 --> 00:00:10.000
 Test Speaker: Testing the Customer Solution Snapshot Generator.
 EOF
-    
+
     # Run the test
     if customer-snapshot process /tmp/test.vtt -o /tmp/test_output.md >/dev/null 2>&1; then
         log_success "System test passed"
@@ -226,12 +226,12 @@ trap cleanup SIGTERM SIGINT
 # Main execution
 main() {
     print_banner
-    
+
     # Setup
     validate_environment
     setup_directories
     initialize_app
-    
+
     # Handle the command
     if [[ $# -eq 0 ]]; then
         log_info "No command specified, showing help..."

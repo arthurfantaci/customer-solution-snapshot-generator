@@ -1,25 +1,25 @@
-version: '3.8'
+version: "3.8"
 
 services:
   customer-snapshot-generator:
     image: ${DOCKER_IMAGE}:${DOCKER_TAG}
     container_name: customer-snapshot-${ENVIRONMENT}
     restart: unless-stopped
-    
+
     # Resource limits
     deploy:
       resources:
         limits:
           memory: ${MEMORY_LIMIT}
-          cpus: '${CPU_LIMIT}'
+          cpus: "${CPU_LIMIT}"
         reservations:
           memory: 512M
-          cpus: '0.5'
-    
+          cpus: "0.5"
+
     # Port mapping
     ports:
       - "${HOST_PORT:-8080}:8080"
-    
+
     # Environment variables
     environment:
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
@@ -33,7 +33,7 @@ services:
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
       - VOYAGEAI_API_KEY=${VOYAGEAI_API_KEY}
       - TAVILY_API_KEY=${TAVILY_API_KEY}
-    
+
     # Volume mounts
     volumes:
       - app_data:/app/data
@@ -50,7 +50,7 @@ services:
         target: /app/logs
         bind:
           create_host_path: true
-    
+
     # Health check
     healthcheck:
       test: ["CMD", "python", "/usr/local/bin/healthcheck.py"]
@@ -58,17 +58,17 @@ services:
       timeout: 10s
       retries: 3
       start_period: 30s
-    
+
     # Security settings
     user: "1000:1000"
     read_only: false
     security_opt:
       - no-new-privileges:true
-    
+
     # Network
     networks:
       - customer_snapshot_network
-    
+
     # Labels for monitoring and management
     labels:
       - "traefik.enable=true"
@@ -78,7 +78,7 @@ services:
       - "com.docker.compose.project=customer-snapshot-generator"
       - "com.docker.compose.service=customer-snapshot-generator"
       - "environment=${ENVIRONMENT}"
-    
+
     # Logging configuration
     logging:
       driver: "json-file"
@@ -86,7 +86,7 @@ services:
         max-size: "10m"
         max-file: "3"
         labels: "environment,service"
-    
+
     # Dependencies
     depends_on:
       redis:
@@ -99,27 +99,27 @@ services:
     image: redis:7-alpine
     container_name: redis-${ENVIRONMENT}
     restart: unless-stopped
-    
+
     command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
-    
+
     volumes:
       - redis_data:/data
-    
+
     networks:
       - customer_snapshot_network
-    
+
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
       retries: 3
-    
+
     # Security
     user: "999:999"
     read_only: true
     tmpfs:
       - /tmp:noexec,nosuid,size=50m
-    
+
     labels:
       - "com.docker.compose.project=customer-snapshot-generator"
       - "com.docker.compose.service=redis"
@@ -130,29 +130,33 @@ services:
     image: postgres:15-alpine
     container_name: postgres-${ENVIRONMENT}
     restart: unless-stopped
-    
+
     environment:
       - POSTGRES_DB=${POSTGRES_DB:-customer_snapshot}
       - POSTGRES_USER=${POSTGRES_USER:-app_user}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-secure_password}
       - POSTGRES_INITDB_ARGS=--auth-host=scram-sha-256
-    
+
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./deployment/scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
-    
+
     networks:
       - customer_snapshot_network
-    
+
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-app_user} -d ${POSTGRES_DB:-customer_snapshot}"]
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-app_user} -d ${POSTGRES_DB:-customer_snapshot}",
+        ]
       interval: 10s
       timeout: 5s
       retries: 3
-    
+
     # Security
     user: "999:999"
-    
+
     labels:
       - "com.docker.compose.project=customer-snapshot-generator"
       - "com.docker.compose.service=postgres"
@@ -163,29 +167,29 @@ services:
     image: nginx:alpine
     container_name: nginx-${ENVIRONMENT}
     restart: unless-stopped
-    
+
     ports:
       - "${NGINX_HTTP_PORT:-80}:80"
       - "${NGINX_HTTPS_PORT:-443}:443"
-    
+
     volumes:
       - ./deployment/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./deployment/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
       - nginx_logs:/var/log/nginx
       - ssl_certs:/etc/nginx/ssl:ro
-    
+
     networks:
       - customer_snapshot_network
-    
+
     depends_on:
       - customer-snapshot-generator
-    
+
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost/health"]
       interval: 30s
       timeout: 10s
       retries: 3
-    
+
     labels:
       - "com.docker.compose.project=customer-snapshot-generator"
       - "com.docker.compose.service=nginx"
@@ -196,25 +200,25 @@ services:
     image: prom/prometheus:latest
     container_name: prometheus-${ENVIRONMENT}
     restart: unless-stopped
-    
+
     ports:
       - "${PROMETHEUS_PORT:-9090}:9090"
-    
+
     volumes:
       - ./deployment/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus_data:/prometheus
-    
+
     command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--web.console.libraries=/etc/prometheus/console_libraries'
-      - '--web.console.templates=/etc/prometheus/consoles'
-      - '--storage.tsdb.retention.time=200h'
-      - '--web.enable-lifecycle'
-    
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.console.libraries=/etc/prometheus/console_libraries"
+      - "--web.console.templates=/etc/prometheus/consoles"
+      - "--storage.tsdb.retention.time=200h"
+      - "--web.enable-lifecycle"
+
     networks:
       - customer_snapshot_network
-    
+
     labels:
       - "com.docker.compose.project=customer-snapshot-generator"
       - "com.docker.compose.service=prometheus"
@@ -225,26 +229,26 @@ services:
     image: grafana/grafana:latest
     container_name: grafana-${ENVIRONMENT}
     restart: unless-stopped
-    
+
     ports:
       - "${GRAFANA_PORT:-3000}:3000"
-    
+
     environment:
       - GF_SECURITY_ADMIN_USER=${GRAFANA_USER:-admin}
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
       - GF_USERS_ALLOW_SIGN_UP=false
-    
+
     volumes:
       - grafana_data:/var/lib/grafana
       - ./deployment/monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
       - ./deployment/monitoring/grafana/datasources:/etc/grafana/provisioning/datasources:ro
-    
+
     networks:
       - customer_snapshot_network
-    
+
     depends_on:
       - prometheus
-    
+
     labels:
       - "com.docker.compose.project=customer-snapshot-generator"
       - "com.docker.compose.service=grafana"
@@ -268,31 +272,31 @@ volumes:
       type: none
       device: ${HOST_DATA_DIR:-./data}
       o: bind
-  
+
   app_logs:
     driver: local
     driver_opts:
       type: none
       device: ${HOST_LOGS_DIR:-./logs}
       o: bind
-  
+
   app_cache:
     driver: local
-  
+
   redis_data:
     driver: local
-  
+
   postgres_data:
     driver: local
-  
+
   nginx_logs:
     driver: local
-  
+
   ssl_certs:
     driver: local
-  
+
   prometheus_data:
     driver: local
-  
+
   grafana_data:
     driver: local

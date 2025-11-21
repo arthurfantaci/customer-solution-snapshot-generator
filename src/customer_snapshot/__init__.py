@@ -1,7 +1,7 @@
 """
 Customer Solution Snapshot Generator
 
-An automated Python tool that transforms video meeting transcripts (VTT files) 
+An automated Python tool that transforms video meeting transcripts (VTT files)
 into structured Customer Success Snapshot documents using NLP and AI technologies.
 """
 
@@ -12,4 +12,5 @@ __author__ = "Customer Snapshot Team"
 from .core.processor import TranscriptProcessor
 from .utils.config import Config
 
-__all__ = ["TranscriptProcessor", "Config"]
+
+__all__ = ["Config", "TranscriptProcessor"]

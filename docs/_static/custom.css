@@ -229,11 +229,11 @@ code {
     .wy-table-responsive table {
         font-size: 0.9em;
     }
-    
+
     .architecture-diagram pre {
         font-size: 0.7em;
     }
-    
+
     .highlight pre {
         font-size: 0.8em;
     }
@@ -268,15 +268,15 @@ code {
     .rst-footer-buttons {
         display: none;
     }
-    
+
     .wy-nav-content-wrap {
         margin-left: 0;
     }
-    
+
     .highlight {
         border: 1px solid #ddd;
     }
-    
+
     a {
         color: #333 !important;
         text-decoration: none;

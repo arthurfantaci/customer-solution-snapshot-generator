@@ -21,7 +21,7 @@ environments:
     volumes:
       - "./data:/app/data"
       - "./logs:/app/logs"
-    
+
   staging:
     docker_image: customer-snapshot-generator
     docker_tag: staging
@@ -38,7 +38,7 @@ environments:
       STREAMING_THRESHOLD_MB: "10"
       GC_FREQUENCY: "1000"
       ENABLE_MEMORY_PROFILING: "false"
-      MAX_FILE_SIZE: "104857600"  # 100MB
+      MAX_FILE_SIZE: "104857600" # 100MB
     volumes:
       - "staging_data:/app/data"
       - "staging_logs:/app/logs"
@@ -46,7 +46,7 @@ environments:
       enabled: true
       hostname: staging-snapshot.example.com
       tls: true
-    
+
   production:
     docker_image: customer-snapshot-generator
     docker_tag: latest
@@ -63,7 +63,7 @@ environments:
       STREAMING_THRESHOLD_MB: "10"
       GC_FREQUENCY: "1000"
       ENABLE_MEMORY_PROFILING: "false"
-      MAX_FILE_SIZE: "209715200"  # 200MB
+      MAX_FILE_SIZE: "209715200" # 200MB
       PERFORMANCE_MONITORING: "true"
       BENCHMARK_INTERVAL: "3600"
     volumes:
@@ -75,7 +75,7 @@ environments:
       tls: true
     backup:
       enabled: true
-      schedule: "0 2 * * *"  # Daily at 2 AM
+      schedule: "0 2 * * *" # Daily at 2 AM
       retention_days: 30
     monitoring:
       enabled: true
@@ -96,7 +96,7 @@ global:
     component: transcript-processor
   annotations:
     deployment.kubernetes.io/revision: "1"
-    
+
 # Resource quotas by environment
 resource_quotas:
   development:
@@ -144,9 +144,9 @@ network_policies:
     - to: []
       ports:
         - protocol: TCP
-          port: 443  # HTTPS
+          port: 443 # HTTPS
         - protocol: TCP
-          port: 80   # HTTP
+          port: 80 # HTTP
 
 # Backup configuration
 backup:

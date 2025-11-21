@@ -1,51 +1,37 @@
-import webvtt
-import nltk
-from nltk.tokenize import sent_tokenize
-import spacy
-import coreferee
-import markdown
-import re
-import os
 import logging
-
+import os
+import re
 from collections import Counter
-from transformers.pipelines import pipeline
+
+import markdown
+import webvtt
+
+# Lazy loading for models - improves import speed and reduces memory usage
+from model_loaders import (
+    get_nlp_model_with_coreferee,
+    get_sentence_tokenizer,
+    get_summarizer,
+)
 from spacy.lang.en.stop_words import STOP_WORDS
-from utils import validate_file_path, safe_file_write, sanitize_filename
+from utils import safe_file_write, sanitize_filename, validate_file_path
+
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-summarizer = pipeline("summarization", model="facebook/bart-large-cnn")
-
-# Download necessary NLTK data
-nltk.download('punkt', quiet=True)
-
-# Load spaCy model
-try:
-    nlp = spacy.load("en_core_web_sm")
-except OSError:
-    print("Downloading spaCy model...")
-    import subprocess
-    subprocess.run(["python", "-m", "spacy", "download", "en_core_web_sm"])
-    nlp = spacy.load("en_core_web_sm")
-
-# Add coreferee to the spaCy pipeline
-nlp.add_pipe('coreferee')
 
 
 def read_vtt(file_path):
     """Step 1: Read the .vtt file with security validation"""
     try:
         # Validate file path and type
-        validated_path = validate_file_path(file_path, allowed_extensions=['.vtt'])
-        
+        validated_path = validate_file_path(file_path, allowed_extensions=[".vtt"])
+
         vtt = webvtt.read(str(validated_path))
         full_text = " ".join([caption.text for caption in vtt])
         logger.info(f"Successfully read VTT file with {len(vtt)} captions")
         return full_text
-    except FileNotFoundError as e:
+    except FileNotFoundError:
         logger.error(f"VTT file not found: {file_path}")
         raise
     except ValueError as e:
@@ -55,84 +41,124 @@ def read_vtt(file_path):
         logger.error(f"Unexpected error reading VTT file: {type(e).__name__}")
         raise RuntimeError("Failed to read VTT file") from e
 
+
 def clean_text(text):
     """Step 2: Clean up the text"""
     # Remove speaker labels (assuming they're in the format "Speaker:")
-    text = re.sub(r'\b\w+:', '', text)
-    
+    text = re.sub(r"\b\w+:", "", text)
+
     # Remove any remaining timestamps
-    text = re.sub(r'\d{2}:\d{2}:\d{2}\.\d{3} --> \d{2}:\d{2}:\d{2}\.\d{3}', '', text)
-    
+    text = re.sub(r"\d{2}:\d{2}:\d{2}\.\d{3} --> \d{2}:\d{2}:\d{2}\.\d{3}", "", text)
+
     # Remove extra whitespace
-    text = ' '.join(text.split())
-    
+    text = " ".join(text.split())
+
     return text
+
 
 def improve_formatting(text):
     """Step 3: Improve formatting and structure"""
+    # Lazy load sentence tokenizer
+    sent_tokenize = get_sentence_tokenizer()
     # Split into sentences
     sentences = sent_tokenize(text)
-    
+
     # Add markdown formatting
     formatted_text = "# Transcript\n\n"
     for sentence in sentences:
         formatted_text += f"- {sentence.strip()}\n"
-    
+
     return formatted_text
+
 
 def enhance_content(text, min_freq=2, min_length=3):
     """Step 4: Enhance content with filtered entities and topics"""
+    # Lazy load NLP model with coreferee
+    nlp = get_nlp_model_with_coreferee()
     doc = nlp(text)
-    
+
     # Custom list of common expressions to exclude
-    common_expressions = set(["Yeah", "you know", "Excellent", "Great", "Understood", "Okay", "I mean", "kind of", "sort of", "a lot", "in fact", "Understood", "Great", "Okay, ", "Alright, "])
-    
+    common_expressions = {
+        "Yeah",
+        "you know",
+        "Excellent",
+        "Great",
+        "Understood",
+        "Okay",
+        "I mean",
+        "kind of",
+        "sort of",
+        "a lot",
+        "in fact",
+        "Okay, ",
+        "Alright, ",
+    }
+
     # Parts of speech to exclude
-    exclude_pos = ['DET', 'PRON', 'ADP', 'CONJ', 'CCONJ', 'PART', 'INTJ']
-    
+    exclude_pos = ["DET", "PRON", "ADP", "CONJ", "CCONJ", "PART", "INTJ"]
+
     # Extend stop words
-    stop_words = STOP_WORDS.union({"said", "would", "could", "should", "will", "can", "may", "might"})
-    
+    stop_words = STOP_WORDS.union(
+        {"said", "would", "could", "should", "will", "can", "may", "might"}
+    )
+
     # Function to check if a span is valid
     def is_valid_span(span):
-        return (len(span) >= min_length and
-                not any(token.is_stop or token.lemma_.lower() in stop_words for token in span) and
-                not any(token.pos_ in exclude_pos for token in span) and
-                span.lemma_.lower() not in common_expressions)
-    
+        return (
+            len(span) >= min_length
+            and not any(
+                token.is_stop or token.lemma_.lower() in stop_words for token in span
+            )
+            and not any(token.pos_ in exclude_pos for token in span)
+            and span.lemma_.lower() not in common_expressions
+        )
+
     # Extract and filter named entities
     entities = [ent.text for ent in doc.ents if is_valid_span(ent)]
-    
+
     # Extract and filter noun phrases (potential topics)
     noun_phrases = [chunk.text for chunk in doc.noun_chunks if is_valid_span(chunk)]
-    
+
     # Count occurrences and filter by frequency
     entity_counts = Counter(entities)
     topic_counts = Counter(noun_phrases)
-    
+
     filtered_entities = [e for e, count in entity_counts.items() if count >= min_freq]
     filtered_topics = [t for t, count in topic_counts.items() if count >= min_freq]
-    
+
     # Construct enhanced text
     enhanced_text = text + "\n\n## Named Entities\n\n"
-    enhanced_text += ", ".join(set(filtered_entities)) if filtered_entities else "No named entities found."
-    
+    enhanced_text += (
+        ", ".join(set(filtered_entities))
+        if filtered_entities
+        else "No named entities found."
+    )
+
     enhanced_text += "\n\n## Potential Topics\n\n"
-    enhanced_text += ", ".join(set(filtered_topics)) if filtered_topics else "No potential topics found."
-    
+    enhanced_text += (
+        ", ".join(set(filtered_topics))
+        if filtered_topics
+        else "No potential topics found."
+    )
+
     return enhanced_text
+
 
 def output_result(text, output_file):
     """Step 5: Output the result securely"""
     try:
         # Convert markdown to HTML
         html = markdown.markdown(text)
-        
+
         # Get the directory and sanitize the filename
-        output_dir = os.path.dirname(output_file) if os.path.dirname(output_file) else os.path.dirname(os.path.abspath(__file__))
+        output_dir = (
+            os.path.dirname(output_file)
+            if os.path.dirname(output_file)
+            else os.path.dirname(os.path.abspath(__file__))
+        )
         sanitized_filename = sanitize_filename(os.path.basename(output_file))
         safe_output_path = os.path.join(output_dir, sanitized_filename)
-        
+
         safe_file_write(safe_output_path, html)
         logger.info(f"Output successfully written to {safe_output_path}")
     except Exception as e:
@@ -149,69 +175,95 @@ def standardize_quotes(text):
     text = re.sub(r'"([^"]*)"', r'"\1"', text)
     return text
 
+
 def split_long_sentences(text, max_length=50):
     """Step 4.6: Use NLTK to split run-on sentences into shorter sentences"""
-    sentences = nltk.sent_tokenize(text)
+    # Lazy load sentence tokenizer
+    sent_tokenize = get_sentence_tokenizer()
+    sentences = sent_tokenize(text)
     new_sentences = []
     for sentence in sentences:
         words = sentence.split()
         if len(words) > max_length:
             # Split the sentence into chunks
-            chunks = [words[i:i + max_length] for i in range(0, len(words), max_length)]
-            new_sentences.extend([' '.join(chunk) + '.' for chunk in chunks])
+            chunks = [
+                words[i : i + max_length] for i in range(0, len(words), max_length)
+            ]
+            new_sentences.extend([" ".join(chunk) + "." for chunk in chunks])
         else:
             new_sentences.append(sentence)
-    return ' '.join(new_sentences)
+    return " ".join(new_sentences)
+
 
 # Functions to address ambiguous pronouns
 def resolve_coreferences(text):
     """Step 4.7: Use coreference resolution to replace pronouns with their antecedents"""
+    # Lazy load NLP model with coreferee
+    nlp = get_nlp_model_with_coreferee()
     doc = nlp(text)  # Process the text with spaCy
     if doc._.has_coref:
         resolved_text = doc._.coref_chains.resolve(text)
         return resolved_text
     return text
 
+
 def flag_ambiguous_pronouns(text):
     """Step 4.8: Identify potentially ambiguous pronouns for manual review"""
+    # Lazy load NLP model
+    nlp = get_nlp_model_with_coreferee()
     doc = nlp(text)
     ambiguous_pronouns = []
     for token in doc:
-        if token.pos_ == 'PRON' and token.dep_ not in ['nsubj', 'dobj']:
+        if token.pos_ == "PRON" and token.dep_ not in ["nsubj", "dobj"]:
             ambiguous_pronouns.append((token.text, token.i))
     return ambiguous_pronouns
 
+
 # Functions to address technical jargon
 def extract_technical_terms(text, min_count=20, min_length=3):
+    # Lazy load NLP model
+    nlp = get_nlp_model_with_coreferee()
     doc = nlp(text)
-    
+
     # Define parts of speech to exclude
-    exclude_pos = ['DET', 'PRON', 'ADP', 'CONJ', 'CCONJ', 'PART', 'INTJ']
-    
+    exclude_pos = ["DET", "PRON", "ADP", "CONJ", "CCONJ", "PART", "INTJ"]
+
     # Create a set of common words to exclude (you can add more)
     common_words = set(STOP_WORDS)
-    common_words.update(['said', 'would', 'could', 'should', 'will', 'can', 'may', 'might'])
-    
+    common_words.update(
+        ["said", "would", "could", "should", "will", "can", "may", "might"]
+    )
+
     # Filter terms
     terms = [
-        token.lemma_.lower() for token in doc 
+        token.lemma_.lower()
+        for token in doc
         if token.pos_ not in exclude_pos
-        and token.pos_ in ['NOUN', 'PROPN', 'ADJ', 'VERB']  # Include adjectives and verbs
+        and token.pos_
+        in ["NOUN", "PROPN", "ADJ", "VERB"]  # Include adjectives and verbs
         and token.is_alpha
         and len(token.text) >= min_length
         and token.lemma_.lower() not in common_words
     ]
-    
+
     # Count occurrences and filter by frequency
     term_counts = Counter(terms)
-    technical_terms = [term for term, count in term_counts.items() if count >= min_count]
-    
+    technical_terms = [
+        term for term, count in term_counts.items() if count >= min_count
+    ]
+
     return technical_terms
 
+
 def generate_explanation(term, context):
+    # Lazy load summarizer model
+    summarizer = get_summarizer()
     prompt = f"Explain the term '{term}' in the context of: {context}"
-    explanation = summarizer(prompt, max_length=20, min_length=15, do_sample=False)[0]['summary_text']
+    explanation = summarizer(prompt, max_length=20, min_length=15, do_sample=False)[0][
+        "summary_text"
+    ]
     return explanation
+
 
 def add_explanations(text, glossary):
     for term, explanation in glossary.items():
@@ -228,13 +280,13 @@ def process_vtt(input_file, output_file):
         if not text:
             logger.warning("No text extracted from VTT file")
             return
-        
+
         # Step 2: Clean up the text
         text = clean_text(text)
-        
+
         # Step 3: Improve formatting and structure
         text = improve_formatting(text)
-        
+
         # Step 4: Enhance content
         text = enhance_content(text)
 
@@ -243,7 +295,7 @@ def process_vtt(input_file, output_file):
 
         # Step 4.6: Split long sentences
         text = split_long_sentences(text)
-        
+
         # Step 4.9: Extract technical terms
         technical_terms = extract_technical_terms(text)
         logger.info(f"Extracted {len(technical_terms)} technical terms")
@@ -252,21 +304,22 @@ def process_vtt(input_file, output_file):
         output_result(text, output_file)
 
         logger.info("Processing completed successfully")
-        
-    except FileNotFoundError as e:
+
+    except FileNotFoundError:
         logger.error("Input file not found")
         raise
-    except ValueError as e:
+    except ValueError:
         logger.error("Invalid input file or parameters")
         raise
     except Exception as e:
         logger.error(f"Processing failed: {type(e).__name__}")
         raise RuntimeError("VTT processing failed") from e
 
+
 # Main entry point
 if __name__ == "__main__":
     import sys
-    
+
     # Parse command-line arguments
     if len(sys.argv) == 1:
         # No arguments provided, use defaults
@@ -284,10 +337,10 @@ if __name__ == "__main__":
         print("Usage: python vtt_to_html_processor.py [input_file] [output_file]")
         print("Defaults: input_file='input.vtt', output_file='output.html'")
         sys.exit(1)
-    
+
     # Use relative paths from the current script location
     script_dir = os.path.dirname(os.path.abspath(__file__))
     input_file = os.path.join(script_dir, "vtt_files", input_filename)
     output_file = os.path.join(script_dir, "vtt_files", output_filename)
-    
+
     process_vtt(input_file, output_file)

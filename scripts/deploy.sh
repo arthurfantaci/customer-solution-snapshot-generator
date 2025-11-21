@@ -76,7 +76,7 @@ EOF
 # Parse command line arguments
 parse_args() {
     COMMAND=""
-    
+
     while [[ $# -gt 0 ]]; do
         case $1 in
             build|deploy|rollback|status|health|logs|clean)
@@ -122,7 +122,7 @@ parse_args() {
                 ;;
         esac
     done
-    
+
     if [[ -z "$COMMAND" ]]; then
         log_error "No command specified"
         show_help
@@ -133,65 +133,65 @@ parse_args() {
 # Check prerequisites
 check_prerequisites() {
     local missing_tools=()
-    
+
     # Check for required tools
     if ! command -v docker &> /dev/null; then
         missing_tools+=("docker")
     fi
-    
+
     if [[ "$DEPLOYMENT_TYPE" == "docker-compose" ]] && ! command -v docker-compose &> /dev/null; then
         missing_tools+=("docker-compose")
     fi
-    
+
     if [[ "$DEPLOYMENT_TYPE" == "kubernetes" ]] && ! command -v kubectl &> /dev/null; then
         missing_tools+=("kubectl")
     fi
-    
+
     if ! command -v python3 &> /dev/null; then
         missing_tools+=("python3")
     fi
-    
+
     if [[ ${#missing_tools[@]} -gt 0 ]]; then
         log_error "Missing required tools: ${missing_tools[*]}"
         log_error "Please install the missing tools and try again"
         exit 1
     fi
-    
+
     # Check if we're in the right directory
     if [[ ! -f "$PROJECT_ROOT/Dockerfile" ]]; then
         log_error "Dockerfile not found in project root: $PROJECT_ROOT"
         exit 1
     fi
-    
+
     log_info "Prerequisites check passed"
 }
 
 # Build Docker image
 build_image() {
     log_info "Building Docker image..."
-    
+
     local tag="${DOCKER_TAG:-latest}"
     local image_name="customer-snapshot-generator:$tag"
     local build_args=""
-    
+
     # Add build arguments
     build_args="--build-arg BUILD_DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-    
+
     # Get git commit if available
     if command -v git &> /dev/null && git rev-parse --git-dir &> /dev/null; then
         local git_commit=$(git rev-parse --short HEAD)
         build_args="$build_args --build-arg VCS_REF=$git_commit"
     fi
-    
+
     # Build image
     if [[ "$VERBOSE" == "true" ]]; then
         docker build $build_args -t "$image_name" "$PROJECT_ROOT"
     else
         docker build $build_args -t "$image_name" "$PROJECT_ROOT" > /dev/null
     fi
-    
+
     log_success "Docker image built: $image_name"
-    
+
     # Push if requested
     if [[ "$PUSH_IMAGE" == "true" ]]; then
         log_info "Pushing image to registry..."
@@ -203,36 +203,36 @@ build_image() {
 # Deploy application
 deploy_application() {
     log_info "Deploying to $ENVIRONMENT environment using $DEPLOYMENT_TYPE"
-    
+
     # Build image if requested
     if [[ "$BUILD_IMAGE" == "true" ]]; then
         build_image
     fi
-    
+
     # Prepare deployment arguments
     local deploy_args="deploy --environment $ENVIRONMENT --type $DEPLOYMENT_TYPE"
-    
+
     if [[ "$BUILD_IMAGE" == "true" ]]; then
         deploy_args="$deploy_args --build"
     fi
-    
+
     if [[ "$DEPLOYMENT_TYPE" == "kubernetes" ]] && [[ -n "${KUBERNETES_NAMESPACE:-}" ]]; then
         deploy_args="$deploy_args --namespace $KUBERNETES_NAMESPACE"
     fi
-    
+
     if [[ "$VERBOSE" == "true" ]]; then
         deploy_args="$deploy_args --verbose"
     fi
-    
+
     # Execute deployment
     python3 "$PROJECT_ROOT/deploy.py" $deploy_args
-    
+
     log_success "Deployment completed"
-    
+
     # Wait for health check
     log_info "Waiting for application to be healthy..."
     sleep 10
-    
+
     if python3 "$PROJECT_ROOT/deploy.py" health --environment "$ENVIRONMENT"; then
         log_success "Application is healthy and ready"
     else
@@ -243,23 +243,23 @@ deploy_application() {
 # Rollback deployment
 rollback_deployment() {
     log_info "Rolling back $ENVIRONMENT deployment"
-    
+
     python3 "$PROJECT_ROOT/deploy.py" rollback --environment "$ENVIRONMENT" --type "$DEPLOYMENT_TYPE"
-    
+
     log_success "Rollback completed"
 }
 
 # Get deployment status
 get_status() {
     log_info "Getting deployment status for $ENVIRONMENT"
-    
+
     python3 "$PROJECT_ROOT/deploy.py" status --environment "$ENVIRONMENT"
 }
 
 # Check application health
 check_health() {
     log_info "Checking application health for $ENVIRONMENT"
-    
+
     if python3 "$PROJECT_ROOT/deploy.py" health --environment "$ENVIRONMENT"; then
         log_success "Application is healthy"
         exit 0
@@ -272,10 +272,10 @@ check_health() {
 # View application logs
 view_logs() {
     log_info "Viewing logs for $ENVIRONMENT"
-    
+
     if [[ "$DEPLOYMENT_TYPE" == "docker-compose" ]]; then
         local compose_file="$PROJECT_ROOT/deployment/docker/docker-compose.$ENVIRONMENT.yml"
-        
+
         if [[ -f "$compose_file" ]]; then
             if [[ "${FOLLOW_LOGS:-false}" == "true" ]]; then
                 docker-compose -f "$compose_file" logs -f
@@ -288,7 +288,7 @@ view_logs() {
         fi
     elif [[ "$DEPLOYMENT_TYPE" == "kubernetes" ]]; then
         local namespace="${KUBERNETES_NAMESPACE:-default}"
-        
+
         if [[ "${FOLLOW_LOGS:-false}" == "true" ]]; then
             kubectl logs -f -l app=customer-snapshot-generator,environment="$ENVIRONMENT" -n "$namespace"
         else
@@ -300,25 +300,25 @@ view_logs() {
 # Clean up resources
 cleanup_resources() {
     log_info "Cleaning up resources for $ENVIRONMENT"
-    
+
     if [[ "$DEPLOYMENT_TYPE" == "docker-compose" ]]; then
         local compose_file="$PROJECT_ROOT/deployment/docker/docker-compose.$ENVIRONMENT.yml"
-        
+
         if [[ -f "$compose_file" ]]; then
             docker-compose -f "$compose_file" down --volumes --remove-orphans
             log_success "Docker Compose resources cleaned up"
         fi
-        
+
         # Clean up unused images
         docker image prune -f
         log_success "Unused Docker images cleaned up"
-        
+
     elif [[ "$DEPLOYMENT_TYPE" == "kubernetes" ]]; then
         local namespace="${KUBERNETES_NAMESPACE:-default}"
-        
+
         kubectl delete -l app=customer-snapshot-generator,environment="$ENVIRONMENT" -n "$namespace" \
             deployment,service,configmap --ignore-not-found=true
-        
+
         log_success "Kubernetes resources cleaned up"
     fi
 }
@@ -327,7 +327,7 @@ cleanup_resources() {
 main() {
     # Parse arguments
     parse_args "$@"
-    
+
     # Set additional variables based on command
     if [[ "$COMMAND" == "logs" ]]; then
         # Check for --follow flag in logs command
@@ -338,17 +338,17 @@ main() {
             fi
         done
     fi
-    
+
     # Print deployment info
     log_info "Customer Solution Snapshot Generator - Deployment Script"
     log_info "Environment: $ENVIRONMENT"
     log_info "Deployment Type: $DEPLOYMENT_TYPE"
     log_info "Command: $COMMAND"
     echo
-    
+
     # Check prerequisites
     check_prerequisites
-    
+
     # Execute command
     case "$COMMAND" in
         build)

@@ -7,7 +7,7 @@ name = "customer-solution-snapshot-generator"
 version = "0.1.0"
 description = "Automated Python tool for generating customer success snapshots from meeting transcripts"
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 license = {file = "LICENSE"}
 authors = [
     {name = "Customer Snapshot Team"},
@@ -19,10 +19,10 @@ classifiers = [
     "Intended Audience :: Information Technology",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
     "Topic :: Text Processing :: Linguistic",
 ]
@@ -32,32 +32,41 @@ dependencies = [
     "langchain>=0.2.11",
     "langchain-anthropic>=0.1.15",
     "langchain-community>=0.2.10",
-    "langchain-voyageai>=0.1.2",
     "python-dotenv>=1.0.1",
     "webvtt-py>=0.4.6",
     "pycaption>=2.2.1",
     "nltk>=3.8.1",
-    "spacy>=3.7.2",
+    "spacy>=3.7.2",  # Using newer spacy for better performance
     "transformers>=4.41.2",
-    "coreferee>=1.4.0",
     "faiss-cpu>=1.8.0",
     "markdown>=3.6",
     "click>=8.1.7",
+    "psutil>=5.9.5",
+    "prometheus-client>=0.17.1",
+    "pyyaml>=6.0.1",
+    "requests>=2.31.0",
 ]
 
 [project.optional-dependencies]
+# RAG features (vector embeddings)
+rag = [
+    "langchain-voyageai>=0.1.2",
+    "langchain-openai>=0.1.17",
+]
+# Development dependencies
 dev = [
     "pytest>=8.2.2",
     "pytest-cov>=5.0.0",
     "pytest-mock>=3.14.0",
-    "black>=24.4.2",
-    "flake8>=7.1.0",
+    "pytest-asyncio>=0.23.7",
+    "ruff>=0.13.0",
     "mypy>=1.10.1",
-    "isort>=5.13.2",
     "bandit>=1.7.9",
-    "safety>=3.2.4",
     "pre-commit>=3.7.1",
+    "ipython>=8.12.0",  # Compatible with Python 3.9+
+    "memory-profiler>=0.61.0",
 ]
+# Documentation generation
 docs = [
     "sphinx>=7.3.7",
     "sphinx-rtd-theme>=2.0.0",
@@ -78,33 +87,76 @@ where = ["src"]
 customer_snapshot = ["templates/*", "data/*"]
 
 # Tool configurations
-[tool.black]
-line-length = 88
-target-version = ['py38']
-include = '\.pyi?$'
-exclude = '''
-/(
-    \.eggs
-  | \.git
-  | \.hg
-  | \.mypy_cache
-  | \.tox
-  | \.venv
-  | _build
-  | buck-out
-  | build
-  | dist
-)/
-'''
 
-[tool.isort]
-profile = "black"
-multi_line_output = 3
-line_length = 88
-known_first_party = ["customer_snapshot"]
+# Ruff - Modern Python linter and formatter (replaces black, isort, flake8)
+[tool.ruff]
+line-length = 88
+target-version = "py39"
+exclude = [
+    ".eggs",
+    ".git",
+    ".mypy_cache",
+    ".pytest_cache",
+    ".ruff_cache",
+    ".tox",
+    ".venv",
+    "__pycache__",
+    "_build",
+    "build",
+    "dist",
+    "venv",
+]
+
+[tool.ruff.lint]
+# Enable pycodestyle (E, W), Pyflakes (F), isort (I), pydocstyle (D),
+# pyupgrade (UP), and more
+select = [
+    "E",     # pycodestyle errors
+    "W",     # pycodestyle warnings
+    "F",     # Pyflakes
+    "I",     # isort
+    "N",     # pep8-naming
+    "UP",    # pyupgrade
+    "B",     # flake8-bugbear
+    "C4",    # flake8-comprehensions
+    "DTZ",   # flake8-datetimez
+    "SIM",   # flake8-simplify
+    "TID",   # flake8-tidy-imports
+    "RUF",   # Ruff-specific rules
+]
+ignore = [
+    "E501",  # Line too long (handled by formatter)
+    "D100",  # Missing docstring in public module
+    "D104",  # Missing docstring in public package
+    "D105",  # Missing docstring in magic method
+]
+
+# Allow autofix for all enabled rules
+fixable = ["ALL"]
+unfixable = []
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401", "D104"]
+"tests/*" = ["D100", "D101", "D102", "D103"]
+"conftest.py" = ["D100"]
+"snapshot_automation/*.py" = ["E402"]  # Legacy code, module level import not at top
+
+[tool.ruff.lint.isort]
+known-first-party = ["customer_snapshot"]
+force-single-line = false
+lines-after-imports = 2
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
 
 [tool.mypy]
-python_version = "3.8"
+python_version = "3.9"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
@@ -157,17 +209,3 @@ exclude_lines = [
 [tool.bandit]
 exclude_dirs = ["tests"]
 skips = ["B101"]  # Skip test_assert_used
-
-[tool.flake8]
-max-line-length = 88
-extend-ignore = ["E203", "W503"]
-exclude = [
-    ".git",
-    "__pycache__",
-    "build",
-    "dist",
-    ".eggs",
-    "*.egg-info",
-    ".venv",
-    ".mypy_cache",
-]

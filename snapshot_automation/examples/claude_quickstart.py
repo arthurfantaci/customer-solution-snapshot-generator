@@ -1,6 +1,8 @@
 import os
-from dotenv import load_dotenv
+
 from anthropic import Anthropic
+from dotenv import load_dotenv
+
 
 # Load environment variables from .env file
 load_dotenv()
@@ -16,21 +18,21 @@ else:
 
 # Ensure the API key is available
 if not api_key:
-	raise ValueError("ANTHROPIC_API_KEY not found in .env file")
+    raise ValueError("ANTHROPIC_API_KEY not found in .env file")
 
 # Initialize the Anthropic client with the loaded API key
 client = Anthropic(api_key=api_key)
 
+
 # Example usage
 def get_response(prompt):
-	message = client.messages.create(
-		model="claude-3-5-sonnet-20240620",
-		max_tokens=1000,
-		messages=[
-			{"role": "user", "content": prompt}
-		]
-	)
-	return message.content
+    message = client.messages.create(
+        model="claude-3-5-sonnet-20240620",
+        max_tokens=1000,
+        messages=[{"role": "user", "content": prompt}],
+    )
+    return message.content
+
 
 # Test the function
 user_prompt = "What are three interesting facts about Python programming?"

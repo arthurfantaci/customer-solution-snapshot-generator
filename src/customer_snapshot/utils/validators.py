@@ -1,77 +1,90 @@
 """
 Utility functions for secure file handling and validation.
 """
-import os
+
 import logging
 from pathlib import Path
-from typing import Union, List, Optional
+from typing import Optional, Union
+
 
 logger = logging.getLogger(__name__)
 
-def validate_file_path(file_path: Union[str, Path], allowed_extensions: Optional[List[str]] = None, max_size: Optional[int] = None) -> Path:
+
+def validate_file_path(
+    file_path: Union[str, Path],
+    allowed_extensions: Optional[list[str]] = None,
+    max_size: Optional[int] = None,
+) -> Path:
     """
     Validate file path before use for security.
-    
+
     Args:
         file_path: Path to validate
         allowed_extensions: List of allowed file extensions (e.g., ['.vtt', '.txt'])
         max_size: Maximum file size in bytes
-    
+
     Returns:
         Path object if valid
-        
+
     Raises:
         FileNotFoundError: If file doesn't exist
         ValueError: If file type not allowed or file too large
     """
     if allowed_extensions is None:
-        allowed_extensions = ['.vtt', '.txt', '.md', '.html']
-    
+        allowed_extensions = [".vtt", ".txt", ".md", ".html"]
+
     if max_size is None:
         max_size = 50 * 1024 * 1024  # 50MB default
-    
+
     path = Path(file_path)
-    
+
     # Check if file exists
     if not path.exists():
         raise FileNotFoundError(f"File not found: {file_path}")
-    
+
     # Check if it's a file (not directory)
     if not path.is_file():
         raise ValueError(f"Path is not a file: {file_path}")
-    
+
     # Check file extension
     if path.suffix.lower() not in allowed_extensions:
         raise ValueError(f"Invalid file type. Allowed extensions: {allowed_extensions}")
-    
+
     # Check file size (prevent DoS attacks)
     if path.stat().st_size > max_size:
-        raise ValueError(f"File too large. Maximum size: {max_size / (1024*1024):.1f}MB")
-    
+        raise ValueError(
+            f"File too large. Maximum size: {max_size / (1024 * 1024):.1f}MB"
+        )
+
     logger.info(f"File validation successful: {path}")
     return path
 
-def safe_file_read(file_path: Union[str, Path], encoding: str = 'utf-8', allowed_extensions: Optional[List[str]] = None) -> str:
+
+def safe_file_read(
+    file_path: Union[str, Path],
+    encoding: str = "utf-8",
+    allowed_extensions: Optional[list[str]] = None,
+) -> str:
     """
     Safely read file with proper error handling.
-    
+
     Args:
         file_path: Path to file
         encoding: File encoding
         allowed_extensions: List of allowed file extensions
-        
+
     Returns:
         File contents as string
-        
+
     Raises:
         FileNotFoundError: If file doesn't exist
         UnicodeDecodeError: If file encoding is invalid
         ValueError: If file is too large or invalid type
     """
     path = validate_file_path(file_path, allowed_extensions)
-    
+
     try:
-        with open(path, 'r', encoding=encoding) as f:
+        with open(path, encoding=encoding) as f:
             content = f.read()
             logger.info(f"Successfully read file: {path}")
             return content
@@ -82,43 +95,49 @@ def safe_file_read(file_path: Union[str, Path], encoding: str = 'utf-8', allowed
         logger.error(f"Error reading file {path}: {type(e).__name__}")
         raise
 
-def safe_file_write(file_path: Union[str, Path], content: str, encoding: str = 'utf-8') -> None:
+
+def safe_file_write(
+    file_path: Union[str, Path], content: str, encoding: str = "utf-8"
+) -> None:
     """
     Safely write file with proper error handling.
-    
+
     Args:
         file_path: Path to output file
         content: Content to write
         encoding: File encoding
-        
+
     Raises:
         PermissionError: If no write permission
         OSError: If disk full or other OS error
     """
     path = Path(file_path)
-    
+
     # Create parent directories if they don't exist
     path.parent.mkdir(parents=True, exist_ok=True)
-    
+
     try:
-        with open(path, 'w', encoding=encoding) as f:
+        with open(path, "w", encoding=encoding) as f:
             f.write(content)
             logger.info(f"Successfully wrote file: {path}")
-    except PermissionError as e:
+    except PermissionError:
         logger.error(f"Permission denied writing to {path}")
         raise
     except OSError as e:
         logger.error(f"OS error writing to {path}: {e}")
         raise
 
-def get_safe_output_path(input_path: Union[str, Path], suffix: str = "_processed") -> Path:
+
+def get_safe_output_path(
+    input_path: Union[str, Path], suffix: str = "_processed"
+) -> Path:
     """
     Generate a safe output path based on input path.
-    
+
     Args:
         input_path: Input file path
         suffix: Suffix to add to filename
-        
+
     Returns:
         Safe output path
     """
@@ -126,42 +145,44 @@ def get_safe_output_path(input_path: Union[str, Path], suffix: str = "_processed
     output_path = input_path.parent / f"{input_path.stem}{suffix}{input_path.suffix}"
     return output_path
 
+
 def sanitize_filename(filename: str) -> str:
     """
     Sanitize filename to prevent path traversal attacks.
-    
+
     Args:
         filename: Original filename
-        
+
     Returns:
         Sanitized filename
     """
     # Remove path separators and other dangerous characters
-    sanitized = "".join(c for c in filename if c.isalnum() or c in ('-', '_', '.'))
-    
+    sanitized = "".join(c for c in filename if c.isalnum() or c in ("-", "_", "."))
+
     # Prevent hidden files and current/parent directory references
-    if sanitized.startswith('.') or sanitized in ('', '.', '..'):
+    if sanitized.startswith(".") or sanitized in ("", ".", ".."):
         sanitized = f"safe_{sanitized}"
-    
+
     return sanitized
+
 
 def create_safe_directory(dir_path: Union[str, Path]) -> Path:
     """
     Create directory safely with proper permissions.
-    
+
     Args:
         dir_path: Directory path to create
-        
+
     Returns:
         Created directory path
     """
     path = Path(dir_path)
-    
+
     try:
         path.mkdir(parents=True, exist_ok=True)
         logger.info(f"Directory created/verified: {path}")
         return path
-    except PermissionError as e:
+    except PermissionError:
         logger.error(f"Permission denied creating directory {path}")
         raise
     except OSError as e:

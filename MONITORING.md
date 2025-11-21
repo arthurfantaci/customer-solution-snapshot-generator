@@ -128,11 +128,11 @@ Configure monitoring through `monitoring_config.yaml`:
 system_monitoring:
   enabled: true
   collection_interval: 10  # seconds
-  
+
   prometheus:
     enabled: true
     port: 8081
-    
+
   metrics:
     system_metrics: true
     application_metrics: true

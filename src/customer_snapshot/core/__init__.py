@@ -2,7 +2,8 @@
 Core processing modules for transcript analysis and enhancement.
 """
 
-from .processor import TranscriptProcessor
 from .nlp_engine import NLPEngine
+from .processor import TranscriptProcessor
 
-__all__ = ["TranscriptProcessor", "NLPEngine"]
+
+__all__ = ["NLPEngine", "TranscriptProcessor"]

@@ -67,7 +67,7 @@ The main orchestration class that coordinates the entire processing pipeline.
             self.vtt_reader = VTTReader(config)
             self.nlp_engine = NLPEngine(config)
             self.output_writer = OutputWriter(config)
-        
+
         def process_file(self, input_path, output_path=None):
             # Template method implementation
             self._validate_input(input_path)
@@ -258,7 +258,7 @@ Processing Metrics
 ~~~~~~~~~~~~~~~~~~
 
 - **Small Files** (< 1MB): < 5 seconds processing time
-- **Medium Files** (1-10MB): < 30 seconds processing time  
+- **Medium Files** (1-10MB): < 30 seconds processing time
 - **Large Files** (10-50MB): < 2 minutes processing time
 - **Memory Usage**: Bounded to 2x file size maximum
 

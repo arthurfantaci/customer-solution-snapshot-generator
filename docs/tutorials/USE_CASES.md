@@ -27,15 +27,15 @@ Real-world use cases and examples for Customer Solution Snapshot Generator.
 templates:
   sales_technical: |
     # Technical Sales Summary
-    
+
     **Company**: {{ metadata.company }}
     **Date**: {{ metadata.date }}
     **Participants**: {{ metadata.participants | join(", ") }}
     **Duration**: {{ metadata.duration }}
-    
+
     ## Executive Summary
     {{ analysis.executive_summary }}
-    
+
     ## Technical Requirements
     {% for req in analysis.technical_requirements %}
     ### {{ req.category }}
@@ -44,31 +44,31 @@ templates:
     - **Priority**: {{ req.priority }}
     - **Timeline**: {{ req.timeline }}
     {% endfor %}
-    
+
     ## Architecture Discussion
     {{ analysis.architecture_notes }}
-    
+
     ## Competitive Landscape
     {% for competitor in analysis.competitors_mentioned %}
     - **{{ competitor.name }}**: {{ competitor.context }}
     {% endfor %}
-    
+
     ## Budget and Decision Making
     - **Budget Range**: {{ analysis.budget_indicators }}
     - **Decision Makers**: {{ analysis.decision_makers | join(", ") }}
     - **Decision Timeline**: {{ analysis.decision_timeline }}
-    
+
     ## Objections and Concerns
     {% for concern in analysis.concerns %}
     - **{{ concern.category }}**: {{ concern.description }}
       - *Response Strategy*: {{ concern.response_strategy }}
     {% endfor %}
-    
+
     ## Next Steps
     {% for action in analysis.action_items %}
     - [ ] {{ action.description }} ({{ action.owner }} - {{ action.due_date }})
     {% endfor %}
-    
+
     ## Technical Proof Points Needed
     {% for proof in analysis.proof_points %}
     - {{ proof.requirement }}: {{ proof.evidence_needed }}
@@ -159,17 +159,17 @@ from datetime import datetime
 class SalesCallAnalyzer:
     def __init__(self):
         self.processor = TranscriptProcessor()
-        
+
     def analyze_sales_pipeline(self, call_transcripts):
         pipeline_data = []
-        
+
         for transcript in call_transcripts:
             analysis = self.processor.process_file(
                 transcript,
                 template='sales_technical',
                 output_format='json'
             )
-            
+
             # Extract key metrics
             metrics = {
                 'call_date': analysis['metadata']['date'],
@@ -181,11 +181,11 @@ class SalesCallAnalyzer:
                 'sentiment': analysis['analysis']['sentiment'],
                 'action_items': len(analysis['analysis']['action_items'])
             }
-            
+
             pipeline_data.append(metrics)
-            
+
         return self.generate_pipeline_report(pipeline_data)
-    
+
     def determine_sales_stage(self, analysis):
         # Logic to determine sales stage based on conversation content
         action_items = analysis['analysis']['action_items']
@@ -352,7 +352,7 @@ class SupportTicketProcessor:
         self.processor = TranscriptProcessor()
         self.jira = JiraClient()
         self.slack = SlackNotifier()
-    
+
     def process_escalation(self, transcript_file, ticket_id):
         # Process the support call transcript
         analysis = self.processor.process_file(
@@ -360,14 +360,14 @@ class SupportTicketProcessor:
             template='support_escalation',
             output_format='json'
         )
-        
+
         # Update Jira ticket
         self.jira.update_ticket(ticket_id, {
             'resolution_summary': analysis['analysis']['resolution']['description'],
             'root_cause': analysis['analysis']['root_cause'],
             'prevention_measures': analysis['analysis']['prevention_measures']
         })
-        
+
         # Notify team if high severity
         if analysis['metadata']['severity'] in ['Critical', 'High']:
             self.slack.notify_channel(
@@ -375,7 +375,7 @@ class SupportTicketProcessor:
                 f"Escalated ticket {ticket_id} processed. "
                 f"Root cause: {analysis['analysis']['root_cause'][:100]}..."
             )
-        
+
         return analysis
 ```
 
@@ -467,10 +467,10 @@ from collections import defaultdict
 class ProductInsightAnalyzer:
     def __init__(self):
         self.processor = TranscriptProcessor()
-        
+
     def analyze_feedback_trends(self, interview_transcripts):
         all_feedback = []
-        
+
         for transcript in interview_transcripts:
             analysis = self.processor.process_file(
                 transcript,
@@ -478,11 +478,11 @@ class ProductInsightAnalyzer:
                 output_format='json'
             )
             all_feedback.append(analysis)
-        
+
         # Aggregate insights
         feature_requests = defaultdict(list)
         pain_points = defaultdict(list)
-        
+
         for feedback in all_feedback:
             for request in feedback['analysis']['feature_requests']:
                 feature_requests[request['title']].append({
@@ -490,20 +490,20 @@ class ProductInsightAnalyzer:
                     'urgency': request['urgency'],
                     'business_value': request['business_value']
                 })
-            
+
             for pain in feedback['analysis']['pain_points']:
                 pain_points[pain['category']].append({
                     'customer': feedback['metadata']['customer'],
                     'impact': pain['impact'],
                     'priority': pain['priority']
                 })
-        
+
         return self.prioritize_features(feature_requests, pain_points)
-    
+
     def prioritize_features(self, feature_requests, pain_points):
         # Priority scoring algorithm
         prioritized_features = []
-        
+
         for feature, requests in feature_requests.items():
             score = self.calculate_priority_score(requests)
             prioritized_features.append({
@@ -512,7 +512,7 @@ class ProductInsightAnalyzer:
                 'customer_count': len(requests),
                 'avg_urgency': sum(r['urgency'] for r in requests) / len(requests)
             })
-        
+
         return sorted(prioritized_features, key=lambda x: x['score'], reverse=True)
 ```
 
@@ -694,7 +694,7 @@ class ProductInsightAnalyzer:
 
 ### Commercial Terms
 {% for term in analysis.commercial_terms %}
-- **{{ term.clause }}**: 
+- **{{ term.clause }}**:
   - *Our Position*: {{ term.our_position }}
   - *Their Position*: {{ term.their_position }}
   - *Status*: {{ term.status }}
@@ -824,7 +824,7 @@ class CRMIntegration:
     def __init__(self):
         self.processor = TranscriptProcessor()
         self.sf = SalesforceClient()
-    
+
     def process_and_sync(self, transcript_file, opportunity_id):
         # Process transcript
         analysis = self.processor.process_file(
@@ -832,7 +832,7 @@ class CRMIntegration:
             template='sales_call',
             output_format='json'
         )
-        
+
         # Update opportunity
         self.sf.update_opportunity(opportunity_id, {
             'Next_Steps__c': '\n'.join([
@@ -845,7 +845,7 @@ class CRMIntegration:
             'Decision_Makers__c': ', '.join(analysis['analysis']['decision_makers']),
             'Last_Call_Sentiment__c': analysis['analysis']['sentiment']
         })
-        
+
         # Create follow-up tasks
         for action in analysis['analysis']['action_items']:
             self.sf.create_task({
@@ -867,19 +867,19 @@ class SlackIntegration:
     def __init__(self, token):
         self.client = WebClient(token=token)
         self.processor = TranscriptProcessor()
-    
+
     def process_and_notify(self, transcript_file, channel):
         analysis = self.processor.process_file(transcript_file)
-        
+
         # Create summary message
         message = self._create_slack_message(analysis)
-        
+
         # Post to channel
         self.client.chat_postMessage(
             channel=channel,
             blocks=message['blocks']
         )
-    
+
     def _create_slack_message(self, analysis):
         return {
             "blocks": [

@@ -42,7 +42,7 @@ This guide helps you upgrade between versions of the Customer Solution Snapshot 
 1. **Configuration Format**
    - Old: Environment variables only
    - New: YAML configuration files supported
-   
+
    Migration:
    ```bash
    # Generate new config from environment
@@ -52,12 +52,12 @@ This guide helps you upgrade between versions of the Customer Solution Snapshot 
 2. **API Changes**
    - `process_transcript()` renamed to `process_file()`
    - New required parameter: `output_format`
-   
+
    Update your code:
    ```python
    # Old
    processor.process_transcript(input_file)
-   
+
    # New
    processor.process_file(input_file, output_format="markdown")
    ```
@@ -65,13 +65,13 @@ This guide helps you upgrade between versions of the Customer Solution Snapshot 
 3. **Docker Volume Mounts**
    - Old: `/data`
    - New: `/app/data/input` and `/app/data/output`
-   
+
    Update docker-compose.yml:
    ```yaml
    # Old
    volumes:
      - ./data:/data
-   
+
    # New
    volumes:
      - ./input:/app/data/input
@@ -99,7 +99,7 @@ This guide helps you upgrade between versions of the Customer Solution Snapshot 
    ```bash
    # Create new config file
    cp .env.example .env
-   
+
    # Update with your settings
    nano .env
    ```
@@ -109,7 +109,7 @@ This guide helps you upgrade between versions of the Customer Solution Snapshot 
    # monitoring_config.yaml
    error_tracking:
      enabled: true
-   
+
    system_monitoring:
      enabled: true
    ```
@@ -121,7 +121,7 @@ This guide helps you upgrade between versions of the Customer Solution Snapshot 
 1. **New CLI Commands**
    - Added `benchmark` command
    - Added `monitor` command
-   
+
 2. **Configuration Updates**
    - New optional settings for monitoring
    - Performance tuning options
@@ -269,7 +269,7 @@ with open('config.yaml', 'w') as f:
    ```bash
    # Clear Python cache
    find . -type d -name __pycache__ -exec rm -rf {} +
-   
+
    # Reinstall package
    pip uninstall customer-snapshot
    pip install customer-snapshot
@@ -279,7 +279,7 @@ with open('config.yaml', 'w') as f:
    ```bash
    # Check logs
    docker logs customer-snapshot
-   
+
    # Verify health check
    docker exec customer-snapshot python /usr/local/bin/healthcheck.py
    ```
@@ -288,7 +288,7 @@ with open('config.yaml', 'w') as f:
    ```bash
    # Validate configuration
    customer-snapshot config validate
-   
+
    # Check environment variables
    customer-snapshot config-info
    ```
@@ -330,10 +330,10 @@ If you encounter issues:
    ```bash
    # Run health check
    python healthcheck.py
-   
+
    # Process test file
    customer-snapshot process test.vtt --output test_output.md
-   
+
    # Check monitoring
    python monitoring_dashboard.py --mode status
    ```

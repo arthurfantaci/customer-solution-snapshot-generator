@@ -2,20 +2,19 @@
 
 # Import necessary libraries
 import os
-from typing import Type
 
 from dotenv import load_dotenv
 from langchain import hub
 from langchain.agents import AgentExecutor, create_tool_calling_agent
 from langchain.pydantic_v1 import BaseModel, Field
-from langchain_core.tools import BaseTool
-from langchain_openai import ChatOpenAI
 from langchain_anthropic import ChatAnthropic
+from langchain_core.tools import BaseTool
 
 
 load_dotenv()
 
 # Pydantic models for tool arguments
+
 
 class SimpleSearchInput(BaseModel):
     query: str = Field(description="should be a search query")
@@ -32,7 +31,7 @@ class MultiplyNumbersArgs(BaseModel):
 class SimpleSearchTool(BaseTool):
     name = "simple_search"
     description = "useful for when you need to answer questions about specific companies or topics"
-    args_schema: Type[BaseModel] = SimpleSearchInput
+    args_schema: type[BaseModel] = SimpleSearchInput
 
     def _run(
         self,
@@ -51,7 +50,7 @@ class SimpleSearchTool(BaseTool):
 class MultiplyNumbersTool(BaseTool):
     name = "multiply_numbers"
     description = "useful for multiplying two numbers"
-    args_schema: Type[BaseModel] = MultiplyNumbersArgs
+    args_schema: type[BaseModel] = MultiplyNumbersArgs
 
     def _run(
         self,
@@ -91,7 +90,11 @@ agent_executor = AgentExecutor.from_agent_and_tools(
 )
 
 # Test the agent with sample queries
-response = agent_executor.invoke({"input": "Search for Artivion. The home page URL for Artivion is https://https://artivion.com/. Provide detailed information about the company. This should include basic details about the company, like 'Company Name', 'Industry' or 'Industries', 'Primary Location', and a 'Company Overview'."})
+response = agent_executor.invoke(
+    {
+        "input": "Search for Artivion. The home page URL for Artivion is https://https://artivion.com/. Provide detailed information about the company. This should include basic details about the company, like 'Company Name', 'Industry' or 'Industries', 'Primary Location', and a 'Company Overview'."
+    }
+)
 print("Response for 'Search for LangChain updates':", response)
 
 # response = agent_executor.invoke({"input": "Multiply 10 and 20"})

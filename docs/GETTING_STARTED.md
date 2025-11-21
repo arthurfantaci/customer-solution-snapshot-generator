@@ -255,7 +255,7 @@ api:
 processing:
   chunk_size: 500
   enable_caching: true
-  
+
 output:
   default_format: markdown
   include_timestamps: true

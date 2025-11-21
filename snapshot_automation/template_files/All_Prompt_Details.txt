@@ -1,11 +1,11 @@
 Customer Information
 Provide detailed information about the customer. This should include basic details about the company and the key contact person.
 •	Company Name:
-•	Industry: 
-•	Location: 
+•	Industry:
+•	Location:
 •	Primary Contact:
-•	Position: 
-•	Contact Information: 
+•	Position:
+•	Contact Information:
 
 Background
 Describe the customer’s initial problem or challenge before using your product/service. This sets the stage for the narrative.

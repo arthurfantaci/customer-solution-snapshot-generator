@@ -3,15 +3,15 @@ name: Production Release
 on:
   push:
     tags:
-      - 'v*'
+      - "v*"
   workflow_dispatch:
     inputs:
       version:
-        description: 'Release version (e.g., v1.0.0)'
+        description: "Release version (e.g., v1.0.0)"
         required: true
         type: string
       release_type:
-        description: 'Release type'
+        description: "Release type"
         required: true
         type: choice
         options:
@@ -47,13 +47,13 @@ jobs:
           else
             VERSION=${{ github.event.inputs.version }}
           fi
-          
+
           # Validate version format
           if ! echo "$VERSION" | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9]+)?$'; then
             echo "Error: Invalid version format. Expected: v1.0.0 or v1.0.0-beta"
             exit 1
           fi
-          
+
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Release version: $VERSION"
 
@@ -69,28 +69,28 @@ jobs:
         run: |
           # Get the previous tag
           PREV_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
-          
+
           if [ -z "$PREV_TAG" ]; then
             echo "First release"
             COMMITS=$(git log --pretty=format:"- %s" | head -20)
           else
             COMMITS=$(git log --pretty=format:"- %s" ${PREV_TAG}..HEAD)
           fi
-          
+
           # Create release notes
           cat > release_notes.md << EOF
           # Release ${{ steps.version.outputs.version }}
-          
+
           ## What's Changed
-          
+
           ${COMMITS}
-          
+
           ## Contributors
           $(git log ${PREV_TAG}..HEAD --pretty=format:"%an" | sort -u | sed 's/^/- @/')
-          
+
           **Full Changelog**: ${PREV_TAG}...${{ steps.version.outputs.version }}
           EOF
-          
+
           echo "release_notes<<EOF" >> $GITHUB_OUTPUT
           cat release_notes.md >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
@@ -101,7 +101,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ['3.8', '3.9', '3.10', '3.11']
+        python-version: ["3.8", "3.9", "3.10", "3.11"]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -130,11 +130,11 @@ jobs:
       - name: Run tests
         run: |
           pytest tests/ --cov=src/customer_snapshot --cov-report=xml --cov-report=html
-          
+
       - name: Run security scan
         run: |
           bandit -r src/ -f json -o bandit-report.json || true
-          
+
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v3
@@ -170,10 +170,10 @@ jobs:
         run: |
           # Run health check
           docker run --rm customer-snapshot:test python /usr/local/bin/healthcheck.py
-          
+
           # Test CLI functionality
           docker run --rm customer-snapshot:test customer-snapshot config-info
-          
+
           # Test with sample data
           docker run --rm -v $(pwd)/tests/data:/app/data/input customer-snapshot:test \
             customer-snapshot process /app/data/input/sample.vtt --output-format markdown
@@ -182,15 +182,15 @@ jobs:
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: customer-snapshot:test
-          format: 'sarif'
-          output: 'trivy-results.sarif'
-          severity: 'CRITICAL,HIGH'
+          format: "sarif"
+          output: "trivy-results.sarif"
+          severity: "CRITICAL,HIGH"
 
       - name: Upload scan results
         uses: github/codeql-action/upload-sarif@v2
         if: always()
         with:
-          sarif_file: 'trivy-results.sarif'
+          sarif_file: "trivy-results.sarif"
 
   performance-validation:
     name: Performance Validation
@@ -203,7 +203,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: "3.10"
 
       - name: Install dependencies
         run: |
@@ -215,22 +215,22 @@ jobs:
       - name: Run performance benchmarks
         run: |
           python benchmark.py --output benchmark-results.json
-          
+
           # Check performance against thresholds
           python -c "
           import json
           with open('benchmark-results.json') as f:
               results = json.load(f)
-          
+
           # Validate performance metrics
           if results['small_file']['processing_time'] > 5.0:
               print('Error: Small file processing too slow')
               exit(1)
-          
+
           if results['medium_file']['memory_peak_mb'] > 500:
               print('Error: Memory usage too high')
               exit(1)
-          
+
           print('Performance validation passed')
           "
 
@@ -242,7 +242,13 @@ jobs:
 
   create-release:
     name: Create Release
-    needs: [validate-release, run-tests, build-and-test-docker, performance-validation]
+    needs:
+      [
+        validate-release,
+        run-tests,
+        build-and-test-docker,
+        performance-validation,
+      ]
     runs-on: ubuntu-latest
     outputs:
       upload_url: ${{ steps.create_release.outputs.upload_url }}
@@ -281,7 +287,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: "3.10"
 
       - name: Install build dependencies
         run: |
@@ -291,7 +297,7 @@ jobs:
       - name: Build Python package
         run: |
           python -m build
-          
+
       - name: Create source archive
         run: |
           VERSION=${{ needs.validate-release.outputs.version }}
@@ -398,7 +404,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: "3.10"
 
       - name: Install dependencies
         run: |
@@ -429,18 +435,19 @@ jobs:
 
   post-release-validation:
     name: Post-Release Validation
-    needs: [validate-release, create-release, publish-docker, deploy-documentation]
+    needs:
+      [validate-release, create-release, publish-docker, deploy-documentation]
     runs-on: ubuntu-latest
     steps:
       - name: Validate Docker image
         run: |
           VERSION=${{ needs.validate-release.outputs.version }}
-          
+
           # Test Docker Hub image
           docker pull ${{ secrets.DOCKER_USERNAME }}/customer-snapshot-generator:${VERSION}
           docker run --rm ${{ secrets.DOCKER_USERNAME }}/customer-snapshot-generator:${VERSION} \
             customer-snapshot --version
-          
+
           # Test GitHub Container Registry image
           docker pull ghcr.io/${{ github.repository }}:${VERSION}
           docker run --rm ghcr.io/${{ github.repository }}:${VERSION} \
@@ -450,7 +457,7 @@ jobs:
         run: |
           VERSION=${{ needs.validate-release.outputs.version }}
           URL="https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/${VERSION}/index.html"
-          
+
           # Check if documentation is accessible
           if curl -f -s -o /dev/null "$URL"; then
             echo "Documentation deployed successfully at $URL"
@@ -465,7 +472,7 @@ jobs:
           script: |
             const version = '${{ needs.validate-release.outputs.version }}';
             const releaseUrl = `https://github.com/${{ github.repository }}/releases/tag/${version}`;
-            
+
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,

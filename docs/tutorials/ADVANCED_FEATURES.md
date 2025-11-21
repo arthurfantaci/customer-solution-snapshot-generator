@@ -163,7 +163,7 @@ batch:
   chunk_size: 1000
   retry_failed: true
   max_retries: 3
-  
+
 templates:
   default: templates/standard.md
   mapping:
@@ -222,12 +222,12 @@ performance:
     chunk_overlap: 100
     max_chunk_size: 2000
     gc_frequency: 1000
-    
+
   caching:
     enabled: true
     max_cache_size_mb: 512
     cache_strategy: "lru"
-    
+
   processing:
     lazy_loading: true
     preload_models: false
@@ -280,7 +280,7 @@ print(f"Analysis: {result}")
 
 ```python
 from customer_snapshot import (
-    TranscriptProcessor, 
+    TranscriptProcessor,
     PerformanceAnalyzer,
     ErrorTracker
 )
@@ -306,12 +306,12 @@ try:
             include_metadata=True,
             extract_entities=True
         )
-        
+
         # Custom post-processing
         enhanced_result = enhance_analysis(result)
-        
+
         return enhanced_result
-        
+
 except Exception as e:
     error_tracker.track_exception(e)
     raise
@@ -327,12 +327,12 @@ class WebhookProcessor:
     def __init__(self, webhook_url):
         self.webhook_url = webhook_url
         self.processor = TranscriptProcessor()
-    
+
     def process_and_notify(self, file_path):
         try:
             # Process transcript
             result = self.processor.process_file(file_path)
-            
+
             # Send webhook notification
             payload = {
                 'status': 'completed',
@@ -340,10 +340,10 @@ class WebhookProcessor:
                 'analysis': result,
                 'timestamp': datetime.now().isoformat()
             }
-            
+
             response = requests.post(self.webhook_url, json=payload)
             response.raise_for_status()
-            
+
         except Exception as e:
             # Send error notification
             error_payload = {
@@ -352,7 +352,7 @@ class WebhookProcessor:
                 'error': str(e),
                 'timestamp': datetime.now().isoformat()
             }
-            
+
             requests.post(self.webhook_url, json=error_payload)
             raise
 
@@ -420,13 +420,13 @@ metrics = MetricsCollector()
 def custom_processing_step(data):
     # Your processing logic
     result = process_data(data)
-    
+
     # Track custom counter
     metrics.increment('processed_items')
-    
+
     # Track custom gauge
     metrics.gauge('queue_size', len(queue))
-    
+
     return result
 
 # Export metrics
@@ -453,7 +453,7 @@ def robust_processing(file_path):
 # Error boundary for critical sections
 with ErrorBoundary("transcript_processing") as boundary:
     result = process_transcript(file_path)
-    
+
 if boundary.errors:
     handle_processing_errors(boundary.errors)
 ```
@@ -485,18 +485,18 @@ class CustomErrorHandler:
             'memory_error': self.handle_memory_error,
             'parse_error': self.handle_parse_error
         }
-    
+
     def handle_api_timeout(self, error, context):
         # Implement exponential backoff
         delay = min(2 ** context.attempt, 60)
         time.sleep(delay)
         return True  # Retry
-    
+
     def handle_memory_error(self, error, context):
         # Reduce chunk size and retry
         context.config.chunk_size //= 2
         return context.config.chunk_size > 100  # Retry if reasonable
-    
+
     def handle_parse_error(self, error, context):
         # Try alternative parsing method
         return try_alternative_parser(context.file_path)
@@ -516,12 +516,12 @@ api:
     max_tokens: 4000
     temperature: 0.1
     timeout: 30
-    
+
   rate_limiting:
     requests_per_minute: 50
     burst_limit: 10
     retry_after_rate_limit: true
-    
+
   connection_pooling:
     max_connections: 10
     keep_alive: true
@@ -583,7 +583,7 @@ processor = TranscriptProcessor()
 def process_transcript():
     file_path = request.json['file_path']
     options = request.json.get('options', {})
-    
+
     try:
         result = processor.process_file(file_path, **options)
         return jsonify({
@@ -612,25 +612,25 @@ def process_message(ch, method, properties, body):
     try:
         data = json.loads(body)
         file_path = data['file_path']
-        
+
         processor = TranscriptProcessor()
         result = processor.process_file(file_path)
-        
+
         # Publish result
         result_message = {
             'file_path': file_path,
             'result': result,
             'status': 'completed'
         }
-        
+
         ch.basic_publish(
             exchange='results',
             routing_key='transcript.completed',
             body=json.dumps(result_message)
         )
-        
+
         ch.basic_ack(delivery_tag=method.delivery_tag)
-        
+
     except Exception as e:
         # Handle error
         error_message = {
@@ -638,13 +638,13 @@ def process_message(ch, method, properties, body):
             'error': str(e),
             'status': 'failed'
         }
-        
+
         ch.basic_publish(
             exchange='errors',
             routing_key='transcript.failed',
             body=json.dumps(error_message)
         )
-        
+
         ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
 
 # RabbitMQ setup
@@ -717,7 +717,7 @@ spec:
 Now that you've mastered the advanced features:
 
 1. **Contribute**: Help improve the project on [GitHub](https://github.com/arthurfantaci/customer-solution-snapshot-generator)
-2. **Customize**: Build custom templates and integrations for your use case  
+2. **Customize**: Build custom templates and integrations for your use case
 3. **Scale**: Deploy in production with monitoring and error tracking
 4. **Optimize**: Fine-tune performance for your specific requirements
 

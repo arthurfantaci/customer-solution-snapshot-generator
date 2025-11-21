@@ -109,7 +109,7 @@ echo ""
 echo "🐳 Checking Docker..."
 if docker info &> /dev/null; then
     echo "✅ Docker daemon is running"
-    
+
     # Try to build image
     echo "   Testing Docker build..."
     if docker build -t release-test . --quiet; then

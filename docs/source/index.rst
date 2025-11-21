@@ -100,7 +100,7 @@ Quick Start
 
       # Copy environment template
       cp .env.example .env
-      
+
       # Add your API keys
       echo "ANTHROPIC_API_KEY=your_key_here" >> .env
 
@@ -110,7 +110,7 @@ Quick Start
 
       # Process a VTT file
       customer-snapshot process transcript.vtt
-      
+
       # Generate HTML output
       customer-snapshot process transcript.vtt -f html -o report.html
 
@@ -119,11 +119,11 @@ Quick Start
    .. code-block:: python
 
       from customer_snapshot import TranscriptProcessor, Config
-      
+
       # Initialize processor
       config = Config.get_default()
       processor = TranscriptProcessor(config)
-      
+
       # Process transcript
       output_path = processor.process_file("transcript.vtt")
       print(f"Generated: {output_path}")

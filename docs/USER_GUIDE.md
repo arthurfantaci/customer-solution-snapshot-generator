@@ -226,12 +226,12 @@ processing:
   chunk_size: 500
   enable_caching: true
   cache_ttl: 3600
-  
+
 output:
   default_format: markdown
   include_timestamps: true
   include_speaker_labels: true
-  
+
 nlp:
   language: en
   extract_entities: true
@@ -387,7 +387,7 @@ Structured data for integration:
    ```bash
    # Larger chunks for better context (more memory)
    customer-snapshot process file.vtt --chunk-size 1000
-   
+
    # Smaller chunks for less memory
    customer-snapshot process file.vtt --chunk-size 200
    ```
@@ -404,7 +404,7 @@ Structured data for integration:
    ```bash
    # Use all CPU cores
    customer-snapshot batch process ./files/ --parallel
-   
+
    # Limit workers
    customer-snapshot batch process ./files/ --max-workers 4
    ```

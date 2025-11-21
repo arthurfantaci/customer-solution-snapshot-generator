@@ -83,7 +83,7 @@ SAMPLE_ENTITIES = [
     {"text": "ServiceNow", "label": "PRODUCT"},
     {"text": "July 14-26, 2024", "label": "DATE"},
     {"text": "John Smith", "label": "PERSON"},
-    {"text": "Sarah Johnson", "label": "PERSON"}
+    {"text": "Sarah Johnson", "label": "PERSON"},
 ]
 
 SAMPLE_NOUN_PHRASES = [
@@ -96,7 +96,7 @@ SAMPLE_NOUN_PHRASES = [
     "training materials",
     "data catalog",
     "data governance",
-    "security compliance"
+    "security compliance",
 ]
 
 # Sample technical terms
@@ -110,7 +110,7 @@ SAMPLE_TECHNICAL_TERMS = [
     "ETL",
     "business intelligence",
     "data governance",
-    "ROI metrics"
+    "ROI metrics",
 ]
 
 # Invalid VTT content for error testing
@@ -131,15 +131,21 @@ Speaker: This also has invalid timestamps.
 # Large content for performance testing
 LARGE_VTT_CONTENT = """WEBVTT
 
-""" + "\n".join([
-    f"00:{i:02d}:{(i*5)%60:02d}.000 --> 00:{i:02d}:{((i*5)+5)%60:02d}.000\nSpeaker {i%3+1}: This is a long transcript entry number {i} with various technical terms and business discussions."
-    for i in range(100)
-])
+""" + "\n".join(
+    [
+        f"00:{i:02d}:{(i * 5) % 60:02d}.000 --> 00:{i:02d}:{((i * 5) + 5) % 60:02d}.000\nSpeaker {i % 3 + 1}: This is a long transcript entry number {i} with various technical terms and business discussions."
+        for i in range(100)
+    ]
+)
 
 # Mock API responses
 MOCK_CLAUDE_RESPONSE = {
-    "content": [{"text": "This is a test response from Claude API containing analysis of the transcript."}],
-    "usage": {"input_tokens": 100, "output_tokens": 50}
+    "content": [
+        {
+            "text": "This is a test response from Claude API containing analysis of the transcript."
+        }
+    ],
+    "usage": {"input_tokens": 100, "output_tokens": 50},
 }
 
 MOCK_VOYAGE_EMBEDDINGS = [
@@ -157,25 +163,16 @@ TEST_ENV_VARS = {
     "MAX_FILE_SIZE": "1048576",  # 1MB
     "CHUNK_SIZE": "300",
     "DEBUG": "true",
-    "LOG_LEVEL": "DEBUG"
+    "LOG_LEVEL": "DEBUG",
 }
 
 # Error scenarios for testing
 ERROR_SCENARIOS = {
-    "file_not_found": {
-        "path": "/nonexistent/file.vtt",
-        "error": "FileNotFoundError"
-    },
-    "invalid_extension": {
-        "path": "/tmp/test.txt",
-        "error": "ValueError"
-    },
+    "file_not_found": {"path": "/nonexistent/file.vtt", "error": "FileNotFoundError"},
+    "invalid_extension": {"path": "/tmp/test.txt", "error": "ValueError"},
     "file_too_large": {
         "size": 100 * 1024 * 1024,  # 100MB
-        "error": "ValueError"
+        "error": "ValueError",
     },
-    "permission_denied": {
-        "path": "/root/protected.vtt",
-        "error": "PermissionError"
-    }
+    "permission_denied": {"path": "/root/protected.vtt", "error": "PermissionError"},
 }

@@ -7,7 +7,7 @@ This directory contains example input files and output results to demonstrate th
 ### Input Examples
 - **`sample_input.vtt`** - Sample WebVTT transcript file showing the expected input format
 
-### Output Examples  
+### Output Examples
 - **`sample_output_markdown.md`** - Example output from `vtt_to_markdown_processor.py`
 - **`sample_output_html.html`** - Example output from `vtt_to_html_processor.py`
 - **`Percona_Kickoff_Transcript_Summary.md`** - Real-world example of a processed customer meeting transcript
@@ -23,7 +23,7 @@ To test the processors with the sample input:
 # Generate Markdown output
 python vtt_to_markdown_processor.py
 
-# Generate HTML output  
+# Generate HTML output
 python vtt_to_html_processor.py
 ```
 
@@ -42,7 +42,7 @@ Both processors are configured to use `sample_input.vtt` by default when run dir
 - Topic identification
 - Structured markdown for easy reading
 
-### HTML Output Features  
+### HTML Output Features
 - Same content as Markdown but in HTML format
 - Ready for web display or embedding
 - Maintains formatting and structure

@@ -32,10 +32,10 @@ metadata:
   namespace: customer-snapshot-generator
 spec:
   limits:
-  - default:
-      cpu: "2"
-      memory: "2Gi"
-    defaultRequest:
-      cpu: "500m"
-      memory: "512Mi"
-    type: Container
+    - default:
+        cpu: "2"
+        memory: "2Gi"
+      defaultRequest:
+        cpu: "500m"
+        memory: "512Mi"
+      type: Container
