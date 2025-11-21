@@ -1,6 +1,22 @@
+"""Text extraction and cleaning utilities for VTT transcripts.
+
+This module provides comprehensive text processing functions for WebVTT
+transcript files, including:
+- Speaker label formatting and capitalization
+- Filler word and stop word removal
+- Caption merging and text extraction
+- Coreference resolution for pronouns
+- Sentence-level cleaning and formatting
+- Named entity and topic extraction
+
+The module includes both individual utility functions and a complete
+processing pipeline for transcript cleanup and enhancement.
+"""
+
 import os
 import re
 from collections import Counter
+from typing import Any
 
 # Lazy loading for models - improves import speed and reduces memory usage
 from model_loaders import (
@@ -50,11 +66,28 @@ exclude_words = {
 }
 
 
-def format_speakers(text):
+def format_speakers(text: str) -> str:
+    r"""Format and capitalize speaker labels in transcript text.
+
+    Identifies speaker labels in the format "- Name:" and reformats them with
+    proper capitalization and paragraph breaks for better readability.
+
+    Args:
+        text: Raw transcript text with speaker labels.
+
+    Returns:
+        Formatted text with capitalized speaker names and paragraph breaks.
+
+    Example:
+        >>> text = "- john doe: Hello there"
+        >>> format_speakers(text)
+        '\n\nJohn Doe: Hello there'
+    """
     # Define a pattern to match speaker labels
     pattern = r"(\s*-\s*)([a-zA-Z\s]+):"
 
-    def format_speaker(match):
+    def format_speaker(match: re.Match[str]) -> str:
+        """Capitalize speaker name and add formatting."""
         # Extract the entire match and the name group
         match.group(0)
         name = match.group(2)
@@ -74,7 +107,23 @@ def format_speakers(text):
     return formatted_text
 
 
-def clean_text(text):
+def clean_text(text: str) -> str:
+    """Remove stop words, filler words, and punctuation from text.
+
+    Uses spaCy NLP tokenization to identify and remove stop words,
+    common filler words, and punctuation while preserving meaningful content.
+
+    Args:
+        text: Raw text to clean.
+
+    Returns:
+        Cleaned text with stop words, filler words, and punctuation removed.
+
+    Example:
+        >>> text = "Um, well, I think that this is great!"
+        >>> clean_text(text)
+        'think great'
+    """
     # Lazy load NLP model
     nlp = get_nlp_model_with_coreferee()
     # Tokenize the text
@@ -103,11 +152,26 @@ def clean_text(text):
 
     return cleaned_text
 
-    # # Remove extra whitespace
-    # text = ' '.join(text.split())
 
+def extract_text(captions: Any) -> str:
+    """Extract plain text from pycaption Caption objects with speaker grouping.
 
-def extract_text(captions):
+    Processes caption nodes to extract text content, identifies speaker labels,
+    and groups continuous speech by the same speaker with paragraph breaks
+    between different speakers.
+
+    Args:
+        captions: Caption list object from pycaption WebVTTReader.
+
+    Returns:
+        Extracted text with speaker labels and paragraph breaks.
+
+    Example:
+        >>> # captions from WebVTTReader
+        >>> text = extract_text(captions)
+        >>> "Speaker1: Hello" in text
+        True
+    """
     text = []
     current_speaker = None
     for caption in captions:
@@ -131,7 +195,24 @@ def extract_text(captions):
     return " ".join(text)
 
 
-def merge_captions(captions):
+def merge_captions(captions: Any) -> list[Any]:
+    """Merge consecutive captions that share the same timeline.
+
+    Combines caption objects when the end time of one matches the start
+    time of the next, consolidating their text nodes while preserving timing.
+
+    Args:
+        captions: List of caption objects from pycaption.
+
+    Returns:
+        List of merged caption objects with consolidated text nodes.
+
+    Example:
+        >>> # captions with matching timestamps get merged
+        >>> merged = merge_captions(captions)
+        >>> len(merged) < len(captions)  # Some captions were merged
+        True
+    """
     merged = []
     current = None
     for caption in captions:
@@ -149,8 +230,24 @@ def merge_captions(captions):
     return merged
 
 
-def improve_formatting(text):
-    """Step 3: Improve formatting and structure"""
+def improve_formatting(text: str) -> str:
+    r"""Format text as Markdown with sentence-per-line structure.
+
+    Splits text into sentences using NLTK tokenization and formats each
+    sentence on its own line under a "Transcript" heading for improved
+    readability.
+
+    Args:
+        text: Plain text to format.
+
+    Returns:
+        Markdown-formatted text with heading and one sentence per line.
+
+    Example:
+        >>> text = "First sentence. Second sentence."
+        >>> improve_formatting(text)
+        '# Transcript\n\nFirst sentence.\nSecond sentence.\n'
+    """
     # Lazy load sentence tokenizer
     sent_tokenize = get_sentence_tokenizer()
     # Split into sentences
@@ -164,8 +261,27 @@ def improve_formatting(text):
     return formatted_text
 
 
-def enhance_content(text, min_freq=2, min_length=3):
-    """Step 4: Enhance content with filtered entities and topics"""
+def enhance_content(text: str, min_freq: int = 2, min_length: int = 3) -> str:
+    """Enhance transcript with filtered named entities and topic extraction.
+
+    Uses spaCy NLP with coreference resolution to extract and filter named entities
+    and noun phrases (topics) from the text. Filters out common expressions,
+    stop words, and low-frequency terms to focus on meaningful content.
+
+    Args:
+        text: Formatted transcript text to enhance.
+        min_freq: Minimum occurrence frequency for entities/topics to be included.
+        min_length: Minimum token length for valid spans.
+
+    Returns:
+        Enhanced text with appended sections for Named Entities and Potential Topics.
+
+    Example:
+        >>> text = "John Smith from Acme Corp discussed the API integration..."
+        >>> enhanced = enhance_content(text)
+        >>> "## Named Entities" in enhanced
+        True
+    """
     # Lazy load NLP model
     nlp = get_nlp_model_with_coreferee()
     doc = nlp(text)
@@ -195,7 +311,8 @@ def enhance_content(text, min_freq=2, min_length=3):
     )
 
     # Function to check if a span is valid
-    def is_valid_span(span):
+    def is_valid_span(span: Any) -> bool:
+        """Check if a spaCy span meets validity criteria for extraction."""
         return (
             len(span) >= min_length
             and not any(
@@ -239,7 +356,28 @@ def enhance_content(text, min_freq=2, min_length=3):
 
 
 # Functions to address ambiguous pronouns
-def resolve_coreferences(text):
+def resolve_coreferences(text: str) -> str:
+    r"""Resolve pronoun coreferences by replacing with entity names.
+
+    Uses spaCy NLP with coreferee to identify named entities (persons, orgs,
+    products) and attempts to replace pronouns with their most likely
+    antecedents based on proximity.
+
+    Args:
+        text: Text with pronouns to resolve.
+
+    Returns:
+        Text with pronouns replaced by entity names where possible.
+
+    Example:
+        >>> text = "John went to the store. He bought milk."
+        >>> resolve_coreferences(text)
+        'John went to the store. John bought milk.'
+
+    Note:
+        This uses a simple proximity-based heuristic for pronoun resolution,
+        which may not always be accurate for complex texts.
+    """
     # Lazy load NLP model with coreferee
     nlp = get_nlp_model_with_coreferee()
 
@@ -253,7 +391,8 @@ def resolve_coreferences(text):
             entities[ent.text.lower()] = ent.text
 
     # Function to replace pronouns
-    def replace_pronoun(match):
+    def replace_pronoun(match: re.Match[str]) -> str:
+        """Replace pronoun with nearest entity name."""
         match.group(0).lower()
         previous_sentence = doc[max(0, match.start() - 200) : match.start()].text
 
@@ -271,7 +410,24 @@ def resolve_coreferences(text):
     return resolved_text
 
 
-def clean_sentence(sentence):
+def clean_sentence(sentence: str) -> str:
+    r"""Remove filler words and phrases from a single sentence.
+
+    Applies regex patterns to remove common filler words (um, uh, like, etc.)
+    and discourse markers (well, okay, right) from the beginning and middle
+    of sentences while preserving meaningful content.
+
+    Args:
+        sentence: Single sentence to clean.
+
+    Returns:
+        Cleaned sentence with filler words removed and proper capitalization.
+
+    Example:
+        >>> sentence = "Um, well, I think that's great, you know?"
+        >>> clean_sentence(sentence)
+        "I think that's great?"
+    """
     # List of filler words and phrases to remove
     filler_words = [
         r"^(Exactly.?|Well,?|Yeah,?|Yeah, so good|Okay|Sounds good|So,?|All right,?|Okay,?|Um,?|Uh,?|Like,?|You know,?|I mean,?|Right,?|Basically,?|Alright,?|Actually,?|Literally,?|Anyways?,?|Yeah,?|Great,?|Thanks,?)",
@@ -282,7 +438,6 @@ def clean_sentence(sentence):
         r"(,? right\??)",
         r"(,? ?okay\??)",
     ]
-    #
 
     # Combine all filler words into one regex pattern
     pattern = "|".join(filler_words)
@@ -296,7 +451,23 @@ def clean_sentence(sentence):
     return cleaned
 
 
-def process_text(plain_text):
+def process_text(plain_text: str) -> str:
+    """Process transcript text by cleaning filler words from each sentence.
+
+    Tokenizes text into sentences and applies sentence-level cleaning to
+    remove filler words while maintaining sentence boundaries and structure.
+
+    Args:
+        plain_text: Plain transcript text to process.
+
+    Returns:
+        Processed text with filler words removed from each sentence.
+
+    Example:
+        >>> text = "Um, hello. Well, how are you? Like, I'm fine."
+        >>> process_text(text)
+        'Hello. How are you? I'm fine.'
+    """
     # Lazy load sentence tokenizer
     sent_tokenize = get_sentence_tokenizer()
     # Split the plain_text into sentences
@@ -311,12 +482,35 @@ def process_text(plain_text):
     return cleaned_text
 
 
-def clean_and_format_transcript(text):
+def clean_and_format_transcript(text: str) -> str:
+    r"""Comprehensive cleaning and formatting of transcript text.
+
+    Performs multiple cleaning and formatting operations including:
+    - Removing extra whitespace
+    - Formatting speaker labels with capitalization
+    - Removing filler words
+    - Fixing punctuation spacing
+    - Capitalizing sentences
+    - Fixing contractions
+    - Adding markdown heading for transcript
+
+    Args:
+        text: Raw transcript text to clean and format.
+
+    Returns:
+        Cleaned and formatted transcript with proper structure.
+
+    Example:
+        >>> text = "john doe:  well  hello   there.jane smith:hi!"
+        >>> clean_and_format_transcript(text)
+        '\\n\\nJohn Doe: Hello there.\\n\\nJane Smith: Hi!'
+    """
     # Remove extra spaces and newlines
     text = re.sub(r"\s+", " ", text).strip()
 
     # Function to capitalize speaker names and add paragraph breaks
-    def format_speaker(match):
+    def format_speaker(match: re.Match[str]) -> str:
+        """Format speaker name with capitalization."""
         name = match.group(1)
         formatted_name = " ".join(word.capitalize() for word in name.split())
         return f"\n\n{formatted_name}: "
