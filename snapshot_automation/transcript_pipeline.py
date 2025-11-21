@@ -1,3 +1,19 @@
+"""Multi-stage VTT transcript processing pipeline with NLP enhancements.
+
+This module implements a complete processing pipeline for WebVTT transcript files,
+transforming raw captions into formatted, enhanced markdown documents. The pipeline
+consists of five main stages:
+
+1. Read VTT: Load and extract text from WebVTT files
+2. Clean Text: Remove speaker labels, timestamps, and extra whitespace
+3. Improve Formatting: Split into sentences and add markdown structure
+4. Enhance Content: Extract named entities and topics using spaCy NLP
+5. Output Result: Write formatted markdown to file
+
+The module uses lazy loading for expensive NLP models (spaCy, NLTK) to minimize
+import time and memory usage when models aren't needed.
+"""
+
 import os
 import re
 
@@ -7,8 +23,23 @@ import webvtt
 from model_loaders import get_nlp_model, get_sentence_tokenizer
 
 
-def read_vtt(file_path):
-    """Step 1: Read the .vtt file"""
+def read_vtt(file_path: str) -> str:
+    """Read and extract text from a WebVTT subtitle file.
+
+    Loads a .vtt file using the webvtt library and concatenates all caption
+    text into a single string with spaces between captions.
+
+    Args:
+        file_path: Path to the .vtt file to read.
+
+    Returns:
+        Concatenated text from all captions, or empty string if error occurs.
+
+    Example:
+        >>> text = read_vtt("transcript.vtt")
+        >>> print(text[:50])
+        'Welcome to the meeting. Today we will discuss...'
+    """
     try:
         vtt = webvtt.read(file_path)
         full_text = " ".join([caption.text for caption in vtt])
@@ -18,8 +49,25 @@ def read_vtt(file_path):
         return ""
 
 
-def clean_text(text):
-    """Step 2: Clean up the text"""
+def clean_text(text: str) -> str:
+    r"""Clean and normalize transcript text by removing labels and timestamps.
+
+    Performs three cleaning operations:
+    1. Removes speaker labels in "Speaker:" format
+    2. Removes VTT timestamp patterns (HH:MM:SS.mmm --> HH:MM:SS.mmm)
+    3. Normalizes whitespace by collapsing multiple spaces
+
+    Args:
+        text: Raw transcript text to clean.
+
+    Returns:
+        Cleaned text with labels, timestamps, and extra whitespace removed.
+
+    Example:
+        >>> raw = "John: Hello there  00:00:01.000 --> 00:00:03.000  everyone"
+        >>> clean_text(raw)
+        'Hello there everyone'
+    """
     # Remove speaker labels (assuming they're in the format "Speaker:")
     text = re.sub(r"\b\w+:", "", text)
 
@@ -32,8 +80,26 @@ def clean_text(text):
     return text
 
 
-def improve_formatting(text):
-    """Step 3: Improve formatting and structure"""
+def improve_formatting(text: str) -> str:
+    """Format transcript text as markdown with sentence-level bullets.
+
+    Tokenizes text into sentences using NLTK's sentence tokenizer (lazy loaded)
+    and formats each sentence as a markdown bullet point under a "Transcript" heading.
+
+    Args:
+        text: Cleaned transcript text to format.
+
+    Returns:
+        Markdown-formatted text with heading and bulleted sentences.
+
+    Example:
+        >>> text = "This is sentence one. This is sentence two."
+        >>> print(improve_formatting(text))
+        # Transcript
+
+        - This is sentence one.
+        - This is sentence two.
+    """
     # Lazy load sentence tokenizer
     sent_tokenize = get_sentence_tokenizer()
 
@@ -48,8 +114,29 @@ def improve_formatting(text):
     return formatted_text
 
 
-def enhance_content(text):
-    """Step 4: Enhance content"""
+def enhance_content(text: str) -> str:
+    """Enhance transcript with NLP-extracted entities and topics.
+
+    Uses spaCy NLP (lazy loaded) to perform:
+    - Named entity recognition (people, organizations, locations, etc.)
+    - Noun phrase extraction for identifying potential discussion topics
+
+    Appends two markdown sections to the input text:
+    - "Named Entities": Unique entities found in the transcript
+    - "Potential Topics": Unique noun phrases that may represent key topics
+
+    Args:
+        text: Formatted transcript text to enhance.
+
+    Returns:
+        Original text with appended Named Entities and Potential Topics sections.
+
+    Example:
+        >>> text = "John works at Acme Corp in New York."
+        >>> enhanced = enhance_content(text)
+        >>> "Named Entities" in enhanced and "Acme Corp" in enhanced
+        True
+    """
     # Lazy load NLP model only when needed
     nlp = get_nlp_model()
     doc = nlp(text)
@@ -73,8 +160,27 @@ def enhance_content(text):
     return enhanced_text
 
 
-def standardize_quotes(text):
-    """Step 4.5: Standardize quotes"""
+def standardize_quotes(text: str) -> str:
+    r"""Normalize quote characters to double quotes.
+
+    Performs two transformations:
+    1. Replaces standalone single quotes with double quotes
+    2. Ensures quoted content uses consistent double quotes
+
+    Args:
+        text: Text with potentially inconsistent quote characters.
+
+    Returns:
+        Text with standardized double quotes.
+
+    Example:
+        >>> text = "He said 'hello' and left."
+        >>> standardize_quotes(text)
+        'He said "hello" and left.'
+
+    Note:
+        This function is currently not used in the main pipeline (process_vtt).
+    """
     # Replace single quotes with double quotes
     text = re.sub(r"(?<!\w)'|'(?!\w)", '"', text)
     # Ensure quotes are properly paired
@@ -82,8 +188,20 @@ def standardize_quotes(text):
     return text
 
 
-def output_result(text, output_file):
-    """Step 5: Output the result"""
+def output_result(text: str, output_file: str) -> None:
+    r"""Write processed transcript text to a file.
+
+    Writes the enhanced markdown text to the specified output file using UTF-8
+    encoding. Prints success or error messages to console.
+
+    Args:
+        text: Processed transcript content to write.
+        output_file: Path to output file (typically .html or .md extension).
+
+    Example:
+        >>> output_result("# Transcript\n\nContent here...", "output.html")
+        Output successfully written to output.html
+    """
     try:
         # Write markdown directly to file
         with open(output_file, "w", encoding="utf-8") as f:
@@ -93,8 +211,27 @@ def output_result(text, output_file):
         print(f"Error writing output file: {e}")
 
 
-def process_vtt(input_file, output_file):
-    """Main pipeline to process the .vtt file"""
+def process_vtt(input_file: str, output_file: str) -> None:
+    """Execute complete VTT processing pipeline from input to output.
+
+    Orchestrates the five-stage pipeline:
+    1. Read VTT file and extract text
+    2. Clean text (remove labels, timestamps, whitespace)
+    3. Improve formatting (sentence tokenization, markdown bullets)
+    4. Enhance content (NLP entity and topic extraction)
+    5. Write output to file
+
+    Processing stops early if VTT file cannot be read.
+
+    Args:
+        input_file: Path to input .vtt file.
+        output_file: Path to output file (typically .html or .md).
+
+    Example:
+        >>> process_vtt("transcript.vtt", "formatted_output.html")
+        Output successfully written to formatted_output.html
+        Processing complete. Output saved to formatted_output.html
+    """
     # Step 1: Read the .vtt file
     text = read_vtt(input_file)
     if not text:

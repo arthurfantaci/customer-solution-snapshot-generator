@@ -157,7 +157,7 @@ def get_sentence_tokenizer() -> Callable[[str], list[str]]:
     from nltk.tokenize import sent_tokenize
 
     ensure_nltk_data()
-    return sent_tokenize
+    return sent_tokenize  # type: ignore[no-any-return]
 
 
 # Pre-warm functions (optional - call these in background if desired)
