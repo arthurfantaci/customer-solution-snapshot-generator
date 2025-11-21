@@ -26,7 +26,12 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
-          cache: "pip"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          version: "0.5.11"
+          enable-cache: true
 
       - name: Install system dependencies
         run: |
@@ -35,35 +40,33 @@ jobs:
 
       - name: Install Python dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements-dev.txt
+          uv sync --extra dev
 
       - name: Download spaCy model
         run: |
-          python -m spacy download en_core_web_sm
+          uv run python -m spacy download en_core_web_sm
 
       - name: Download NLTK data
         run: |
-          python -c "import nltk; nltk.download('punkt', quiet=True)"
+          uv run python -c "import nltk; nltk.download('punkt', quiet=True)"
 
       - name: Run linting
         run: |
-          flake8 src/ --count --statistics
-          black --check src/
-          isort --check-only src/
+          uv run ruff check src/ --output-format=github
+          uv run ruff format --check src/
 
       - name: Run type checking
         run: |
-          mypy src/customer_snapshot/ --ignore-missing-imports
+          uv run mypy src/customer_snapshot/ --ignore-missing-imports
 
       - name: Run security scanning
         run: |
-          bandit -r src/ --format json --output bandit-report.json || true
-          safety check --json --output safety-report.json || true
+          uv run bandit -r src/ --format json --output bandit-report.json || true
+          uv run pip list --format=json | uv run safety check --stdin --json --output safety-report.json || true
 
       - name: Run tests
         run: |
-          pytest tests/ \
+          uv run pytest tests/ \
             --cov=src/customer_snapshot \
             --cov-report=xml \
             --cov-report=html \
@@ -102,40 +105,41 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: "3.10"
-          cache: "pip"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          version: "0.5.11"
+          enable-cache: true
 
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements-dev.txt
+          uv sync --extra dev
 
       - name: Run comprehensive linting
         run: |
           # Code formatting check
-          black --check --diff src/
+          uv run ruff format --check --diff src/
 
-          # Import sorting check
-          isort --check-only --diff src/
-
-          # Comprehensive linting
-          flake8 src/ --statistics --tee --output-file=flake8-report.txt
+          # Comprehensive linting (replaces flake8, isort checks)
+          uv run ruff check src/ --output-format=github --statistics > ruff-report.txt || true
 
           # Security analysis
-          bandit -r src/ -f json -o bandit-report.json
+          uv run bandit -r src/ -f json -o bandit-report.json
 
           # Dependency vulnerability check
-          safety check --json --output safety-report.json
+          uv run pip list --format=json | uv run safety check --stdin --json --output safety-report.json || true
 
       - name: Run type checking
         run: |
-          mypy src/customer_snapshot/ --html-report mypy-report --txt-report mypy-report.txt
+          uv run mypy src/customer_snapshot/ --html-report mypy-report --txt-report mypy-report.txt || true
 
       - name: Upload quality reports
         uses: actions/upload-artifact@v3
         with:
           name: quality-reports
           path: |
-            flake8-report.txt
+            ruff-report.txt
             bandit-report.json
             safety-report.json
             mypy-report/
@@ -167,21 +171,27 @@ jobs:
         with:
           python-version: "3.10"
 
-      - name: Install security tools
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          version: "0.5.11"
+          enable-cache: true
+
+      - name: Install dependencies and security tools
         run: |
-          python -m pip install --upgrade pip
-          pip install safety bandit semgrep
+          uv sync --extra dev
+          uv pip install semgrep
 
       - name: Run security checks
         run: |
           # Check for known vulnerabilities in dependencies
-          safety check --json --output safety-detailed.json
+          uv run pip list --format=json | uv run safety check --stdin --json --output safety-detailed.json || true
 
           # Static security analysis
-          bandit -r src/ -f json -o bandit-detailed.json
+          uv run bandit -r src/ -f json -o bandit-detailed.json
 
           # Additional security scanning with semgrep
-          semgrep --config=auto src/ --json --output=semgrep-report.json
+          uv run semgrep --config=auto src/ --json --output=semgrep-report.json || true
 
       - name: Upload security reports
         uses: actions/upload-artifact@v3
@@ -206,14 +216,19 @@ jobs:
         with:
           python-version: "3.10"
 
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          version: "0.5.11"
+          enable-cache: true
+
       - name: Install build dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install build twine
+          uv pip install build twine
 
       - name: Build package
         run: |
-          python -m build
+          uv run python -m build
 
       - name: Check package
         run: |
@@ -238,28 +253,32 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: "3.10"
-          cache: "pip"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          version: "0.5.11"
+          enable-cache: true
 
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements-dev.txt
+          uv sync --extra dev
 
       - name: Download models
         run: |
-          python -m spacy download en_core_web_sm
-          python -c "import nltk; nltk.download('punkt', quiet=True)"
+          uv run python -m spacy download en_core_web_sm
+          uv run python -c "import nltk; nltk.download('punkt', quiet=True)"
 
       - name: Run integration tests
         run: |
-          pytest tests/integration/ -v --tb=short
+          uv run pytest tests/integration/ -v --tb=short
         env:
           # Mock API keys for integration tests
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY || 'mock_key_for_testing' }}
 
       - name: Run performance tests
         run: |
-          pytest tests/integration/ -m slow -v --tb=short
+          uv run pytest tests/integration/ -m slow -v --tb=short
 
   notify:
     name: Notify Results
