@@ -55,7 +55,7 @@ cp snapshot_automation/.env.example snapshot_automation/.env
 ```bash
 ls snapshot_automation/examples/
 # Shows: sample_input.vtt, sample_output_markdown.md, sample_output_html.html,
-#        Percona_Kickoff_Transcript_Summary.md, claude_quickstart.py
+#        Quest Enterprises_Kickoff_Transcript_Summary.md, claude_quickstart.py
 ```
 
 2. View the examples README for detailed explanations:
@@ -198,9 +198,9 @@ customer-solution-snapshot-generator/
 
 ## Example Use Case
 
-The repository includes a real-world example of processing a Percona project kickoff meeting:
-- Customer: Percona (Database Services)
-- Project: Qlik Cloud Platform implementation
+The repository includes a real-world example of processing a Quest Enterprises project kickoff meeting:
+- Customer: Quest Enterprises (Database Services)
+- Project: Quiznos Analytics Cloud Platform implementation
 - Timeline: July 2024
 - Output: Structured snapshot documenting goals, milestones, and deliverables
 

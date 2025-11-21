@@ -32,13 +32,13 @@ def sample_vtt_content() -> str:
     return """WEBVTT
 
 00:00:01.000 --> 00:00:05.000
-Speaker 1: Welcome to the Qlik implementation meeting.
+Speaker 1: Welcome to the Quiznos Analytics implementation meeting.
 
 00:00:05.000 --> 00:00:10.000
 Speaker 2: Thank you for joining us today. We'll discuss the project timeline.
 
 00:00:10.000 --> 00:00:15.000
-Speaker 1: The main goal is to implement Qlik Cloud Platform for data analytics.
+Speaker 1: The main goal is to implement Quiznos Analytics Cloud Platform for data analytics.
 
 00:00:15.000 --> 00:00:20.000
 Speaker 2: We need to resolve ServiceNow data connector issues first.
@@ -96,7 +96,7 @@ def mock_spacy_nlp():
 
     # Mock entities
     mock_entity = Mock()
-    mock_entity.text = "Qlik Cloud Platform"
+    mock_entity.text = "Quiznos Analytics Cloud Platform"
     mock_entity.label_ = "PRODUCT"
     mock_doc.ents = [mock_entity]
 
@@ -125,14 +125,14 @@ def sample_processed_text() -> str:
 
 ## Key Discussion Points
 
-The meeting focused on implementing Qlik Cloud Platform for data analytics. The main objectives include:
+The meeting focused on implementing Quiznos Analytics Cloud Platform for data analytics. The main objectives include:
 
 - Resolving ServiceNow data connector issues
 - Completing the project in two phases
 - Allocating 80 hours for implementation
 
 ## Technical Terms Identified
-- Qlik Cloud Platform
+- Quiznos Analytics Cloud Platform
 - ServiceNow
 - data analytics
 - data connector

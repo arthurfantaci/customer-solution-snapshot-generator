@@ -53,8 +53,8 @@ retriever = FAISS.from_documents(
     texts, VoyageAIEmbeddings(voyage_api_key=voyage_api_key, model="voyage-law-2")
 ).as_retriever(search_kwargs={"k": 5})
 
-background_prompt = "Your task is to describe the Customer's initial problem or challenge before using Qlik's products and services. This description will set the stage for the narrative."
-solution_prompt = "Detail the specific product/service from Qlik/Talend that was implemented. Explain how it was introduced and applied to the customer's problem."
+background_prompt = "Your task is to describe the Customer's initial problem or challenge before using Quiznos Analytics's products and services. This description will set the stage for the narrative."
+solution_prompt = "Detail the specific product/service from Quiznos Analytics/Talenti Data Works that was implemented. Explain how it was introduced and applied to the customer's problem."
 
 
 relevant_docs = retriever.invoke(solution_prompt)

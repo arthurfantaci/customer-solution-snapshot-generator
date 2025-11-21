@@ -263,13 +263,13 @@ def test(ctx: click.Context, output: Path) -> None:
         test_vtt_content = """WEBVTT
 
 00:00:01.000 --> 00:00:05.000
-Speaker 1: Welcome to the Qlik implementation meeting.
+Speaker 1: Welcome to the Quiznos Analytics implementation meeting.
 
 00:00:05.000 --> 00:00:10.000
 Speaker 2: Thank you for joining. We'll discuss the project timeline and deliverables.
 
 00:00:10.000 --> 00:00:15.000
-Speaker 1: The main goal is to implement Qlik Cloud Platform for data analytics.
+Speaker 1: The main goal is to implement Quiznos Analytics Cloud Platform for data analytics.
 """
 
         test_vtt_path = Path("test_input.vtt")

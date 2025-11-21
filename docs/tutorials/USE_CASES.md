@@ -95,7 +95,7 @@ customer-snapshot process technical_call_acme_corp.vtt \
 
 **Company**: Acme Corporation
 **Date**: 2024-01-15
-**Participants**: John Smith (CTO), Sarah Johnson (Sales Engineer), Mike Chen (Solutions Architect)
+**Participants**: John Smith (CTO), Sarah Jameson (Sales Engineer), Charles Michaels (Solutions Architect)
 **Duration**: 1:45:32
 
 ## Executive Summary

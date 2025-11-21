@@ -10,7 +10,7 @@ This directory contains example input files and output results to demonstrate th
 ### Output Examples
 - **`sample_output_markdown.md`** - Example output from `vtt_to_markdown_processor.py`
 - **`sample_output_html.html`** - Example output from `vtt_to_html_processor.py`
-- **`Percona_Kickoff_Transcript_Summary.md`** - Real-world example of a processed customer meeting transcript
+- **`Quest Enterprises_Kickoff_Transcript_Summary.md`** - Real-world example of a processed customer meeting transcript
 
 ### API Integration Examples
 - **`claude_quickstart.py`** - Standalone Claude API integration example and test script
@@ -47,7 +47,7 @@ Both processors are configured to use `sample_input.vtt` by default when run dir
 - Ready for web display or embedding
 - Maintains formatting and structure
 
-### Real-World Example (Percona)
+### Real-World Example (Quest Enterprises)
 - Complete customer meeting analysis
 - Project overview and goals
 - Key discussion points extracted

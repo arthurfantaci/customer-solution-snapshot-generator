@@ -1,25 +1,25 @@
-# Qlik Implementation Project Kickoff Meeting Transcript
+# Quiznos Analytics Implementation Project Kickoff Meeting Transcript
 
 **Participants:**
 
-- Arthur Fantaci (Qlik Professional Services)
-- Filip Hanaczewski (Percona)
+- Bob Jones (Quiznos Analytics Professional Services)
+- Franklin Dorsey (Quest Enterprises)
 
 ## Project Overview
 
 ### Company Information
 
-- **Company Name:** Percona
+- **Company Name:** Quest Enterprises
 - **Industry:** Database Services
 - **Location:** Raleigh, North Carolina, United States
-- **Company Contact:** Filip Hanaczewski
+- **Company Contact:** Franklin Dorsey
 - **Contact Role:** Senior Business Systems Analyst
 
 ### Project Goals
 
-1. Implement Qlik Cloud Platform for data and analytics adoption
+1. Implement Quiznos Analytics Cloud Platform for data and analytics adoption
 2. Create a booking data dashboard for the finance team
-3. Resolve issues with the Qlik ServiceNow data connector
+3. Resolve issues with the Quiznos Analytics ServiceNow data connector
 4. Prepare training materials and data catalog
 
 ### Engagement Details
@@ -30,23 +30,23 @@
 
 ### Engagement Team
 
-- Filip Hanaczewski (Percona)
-- Eduardo Casareo (Percona - Director, decision maker)
-- Amal Naik (Percona - Senior Financial Analyst, primary stakeholder)
-- Shannon [Lastname] (Percona - Amal's manager)
-- Eileen Bigwig (Percona - Engagement sponsor)
-- Arthur Fantaci (Qlik Professional Services)
-- Mark Vincze (Qlik Professional Services - Management)
+- Franklin Dorsey (Quest Enterprises)
+- Edward Chase (Quest Enterprises - Director, decision maker)
+- Andrew Neighbor (Quest Enterprises - Senior Financial Analyst, primary stakeholder)
+- Shannon [Lastname] (Quest Enterprises - Amal's manager)
+- Eileen Brown (Quest Enterprises - Engagement sponsor)
+- Bob Jones (Quiznos Analytics Professional Services)
+- Vincent Martin (Quiznos Analytics Professional Services - Management)
 
 ## Key Discussion Points
 
 ### Booking Data Dashboard
 
 - Based on Salesforce data
-- Currently experiencing data discrepancies between Salesforce and Qlik
+- Currently experiencing data discrepancies between Salesforce and Quiznos Analytics
 - Need to ensure 100% validation of data
 - Issues with currency conversion rates
-- Amal Naik to provide more details on requirements and storytelling approach
+- Andrew Neighbor to provide more details on requirements and storytelling approach
 
 ### ServiceNow Data Connector Issue
 
@@ -56,8 +56,8 @@
 
 ### Training and Data Catalog
 
-- Create training materials based on Qlik Continuous Classroom (QCC) resources
-- Develop a data catalog concept for Percona
+- Create training materials based on Quiznos Analytics Continuous Classroom (QCC) resources
+- Develop a data catalog concept for Quest Enterprises
 - Segment user base and create customized training roadmaps
 
 ### Data Modeling
@@ -70,7 +70,7 @@
 
 1. Arthur to review provided documentation and prepare draft engagement work plan
 2. Daily meetings at 9:00 AM ET, starting Tuesday, July 16, 2024
-3. Dedicated session with Amal Naik to discuss booking data dashboard requirements
+3. Dedicated session with Andrew Neighbor to discuss booking data dashboard requirements
 4. Filip to send details about ETR dashboard and ServiceNow connector issues
 5. Arthur to investigate ServiceNow connector problem and determine course of action
 
@@ -78,6 +78,6 @@
 
 - [ ] Filip to send document with booking data dashboard details
 - [ ] Arthur to prepare draft engagement work plan and deliverables
-- [ ] Schedule meeting with Amal Naik for booking data dashboard discussion
-- [ ] Filip to provide Qlik support ticket number for ServiceNow connector issue
+- [ ] Schedule meeting with Andrew Neighbor for booking data dashboard discussion
+- [ ] Filip to provide Quiznos Analytics support ticket number for ServiceNow connector issue
 - [ ] Arthur to review and address ServiceNow connector problem

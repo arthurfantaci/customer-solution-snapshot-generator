@@ -39,8 +39,8 @@ class TestCompleteWorkflow:
 
             # Mock entities
             entities = [
-                Mock(text="Percona", label_="ORG"),
-                Mock(text="Qlik Cloud Platform", label_="PRODUCT"),
+                Mock(text="Quest Enterprises", label_="ORG"),
+                Mock(text="Quiznos Analytics Cloud Platform", label_="PRODUCT"),
                 Mock(text="ServiceNow", label_="PRODUCT"),
             ]
             mock_doc.ents = entities

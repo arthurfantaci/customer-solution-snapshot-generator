@@ -12,7 +12,7 @@ Describe the customer’s initial problem or challenge before using your product
 •	Problem / Challenge Information: [Describe the specific problem/challenge the customer faced]
 
 Solution
-Detail the specific product/service from Qlik/Talend that was implemented. Explain how it was introduced and applied to the customer’s problem.
+Detail the specific product/service from Quiznos Analytics/Talenti Data Works that was implemented. Explain how it was introduced and applied to the customer’s problem.
 •	Product/Service Used: [Mention the specific product/service]
 •	Implementation Process: [Describe the process of how the solution was implemented]
 

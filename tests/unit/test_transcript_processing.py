@@ -164,7 +164,7 @@ class TestTechnicalTermExtraction:
 
         # Mock entities
         mock_entity = Mock()
-        mock_entity.text = "Qlik Cloud Platform"
+        mock_entity.text = "Quiznos Analytics Cloud Platform"
         mock_entity.label_ = "PRODUCT"
         mock_doc.ents = [mock_entity]
 
@@ -175,7 +175,7 @@ class TestTechnicalTermExtraction:
 
         mock_nlp.return_value = mock_doc
 
-        input_text = "We use Qlik Cloud Platform for data analytics."
+        input_text = "We use Quiznos Analytics Cloud Platform for data analytics."
         result = extract_technical_terms(input_text)
 
         assert isinstance(result, list)

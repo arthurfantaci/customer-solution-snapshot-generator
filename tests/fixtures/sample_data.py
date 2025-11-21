@@ -15,28 +15,28 @@ Speaker 2: This is a test.
 COMPLEX_VTT_CONTENT = """WEBVTT
 
 00:00:01.000 --> 00:00:05.000
-John Smith: Welcome to the Percona Qlik implementation kickoff meeting.
+John Smith: Welcome to the Quest Enterprises Quiznos Analytics implementation kickoff meeting.
 
 00:00:05.000 --> 00:00:15.000
-Sarah Johnson: Thank you for joining us. Today we'll discuss the Qlik Cloud Platform implementation for data analytics.
+Sarah Jameson: Thank you for joining us. Today we'll discuss the Quiznos Analytics Cloud Platform implementation for data analytics.
 
 00:00:15.000 --> 00:00:25.000
 John Smith: Our primary goal is to create a booking data dashboard for the finance team.
 
 00:00:25.000 --> 00:00:35.000
-Sarah Johnson: We also need to resolve the ServiceNow data connector issues that have been ongoing.
+Sarah Jameson: We also need to resolve the ServiceNow data connector issues that have been ongoing.
 
 00:00:35.000 --> 00:00:45.000
 John Smith: The project timeline is July 14-26, 2024, with 80 hours split into two phases.
 
 00:00:45.000 --> 00:00:55.000
-Sarah Johnson: Phase 1 will focus on infrastructure setup and basic dashboard creation.
+Sarah Jameson: Phase 1 will focus on infrastructure setup and basic dashboard creation.
 
 00:00:55.000 --> 00:01:05.000
 John Smith: Phase 2 will include advanced analytics, training materials, and data catalog preparation.
 
 00:01:05.000 --> 00:01:15.000
-Sarah Johnson: We'll need to ensure proper data governance and security compliance throughout.
+Sarah Jameson: We'll need to ensure proper data governance and security compliance throughout.
 
 00:01:15.000 --> 00:01:25.000
 John Smith: The ROI metrics will include reduced reporting time and improved decision-making speed.
@@ -45,19 +45,19 @@ John Smith: The ROI metrics will include reduced reporting time and improved dec
 # Sample processed text outputs
 SAMPLE_PROCESSED_OUTPUT = """# Meeting Transcript Summary
 
-**Participants:** John Smith, Sarah Johnson
+**Participants:** John Smith, Sarah Jameson
 
 ## Key Discussion Points
 
-The meeting focused on the Percona Qlik implementation project. Key objectives include:
+The meeting focused on the Quest Enterprises Quiznos Analytics implementation project. Key objectives include:
 
-- Implementing Qlik Cloud Platform for data analytics
+- Implementing Quiznos Analytics Cloud Platform for data analytics
 - Creating booking data dashboard for finance team
 - Resolving ServiceNow data connector issues
 - Completing project in two phases (July 14-26, 2024)
 
 ## Technical Terms Identified
-- Qlik Cloud Platform
+- Quiznos Analytics Cloud Platform
 - ServiceNow
 - data analytics
 - data dashboard
@@ -78,12 +78,12 @@ The meeting focused on the Percona Qlik implementation project. Key objectives i
 
 # Sample entities and noun phrases for NLP testing
 SAMPLE_ENTITIES = [
-    {"text": "Percona", "label": "ORG"},
-    {"text": "Qlik Cloud Platform", "label": "PRODUCT"},
+    {"text": "Quest Enterprises", "label": "ORG"},
+    {"text": "Quiznos Analytics Cloud Platform", "label": "PRODUCT"},
     {"text": "ServiceNow", "label": "PRODUCT"},
     {"text": "July 14-26, 2024", "label": "DATE"},
     {"text": "John Smith", "label": "PERSON"},
-    {"text": "Sarah Johnson", "label": "PERSON"},
+    {"text": "Sarah Jameson", "label": "PERSON"},
 ]
 
 SAMPLE_NOUN_PHRASES = [
@@ -101,7 +101,7 @@ SAMPLE_NOUN_PHRASES = [
 
 # Sample technical terms
 SAMPLE_TECHNICAL_TERMS = [
-    "Qlik Cloud Platform",
+    "Quiznos Analytics Cloud Platform",
     "ServiceNow",
     "data analytics",
     "dashboard",

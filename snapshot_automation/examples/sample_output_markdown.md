@@ -2,8 +2,8 @@
 
 - John Smith (Customer): Hi everyone, thanks for taking the time to meet with us today.
 - I'm John Smith, CTO at Acme Corporation.
-- Sarah Johnson (Sales Engineer): Thanks for having us, John.
-- I'm Sarah Johnson, and this is Mike Chen, our Solutions Architect.
+- Sarah Jameson (Sales Engineer): Thanks for having us, John.
+- I'm Sarah Jameson, and this is Charles Michaels, our Solutions Architect.
 - We're excited to learn more about your infrastructure challenges.
 - John Smith (Customer): Great.
 - So we're currently running about 200 servers on-premise, mix of Windows and Linux environments.
@@ -11,7 +11,7 @@
 
 ## Named Entities
 
-John Smith, Sarah Johnson, Mike Chen, Acme Corporation
+John Smith, Sarah Jameson, Charles Michaels, Acme Corporation
 
 ## Potential Topics
 
