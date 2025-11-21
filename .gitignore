@@ -89,3 +89,7 @@ dmypy.json
 
 # uv
 .python-version
+
+# Node.js
+node_modules/
+package-lock.json
