@@ -25,7 +25,17 @@ from typing import Any, Callable, Optional
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 
 from ..utils.config import Config
-from .system_monitor import Alert
+
+
+@dataclass
+class Alert:
+    """Simple alert data structure for error notifications."""
+
+    name: str
+    level: str
+    message: str
+    timestamp: str
+    details: dict[str, Any]
 
 
 logger = logging.getLogger(__name__)

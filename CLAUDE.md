@@ -115,7 +115,7 @@ The project has two parallel implementations that serve different purposes:
 
 1. **`src/customer_snapshot/`** - Modern, well-structured Python package
    - Proper error handling, type hints, and comprehensive docstrings
-   - Memory optimization and monitoring features
+   - Memory optimization and error tracking
    - Used for production-grade implementations
 
 2. **`snapshot_automation/`** - Legacy automation scripts
@@ -142,15 +142,13 @@ VTT File → Parser → Text Cleaner → NLP Processor → AI Enhancement → Fo
 - **io/vtt_reader.py**: VTT file parsing and validation
 - **io/output_writer.py**: HTML/Markdown output generation
 - **utils/memory_optimizer.py**: Memory optimization for large files
-- **monitoring/**: System monitoring, health checks, error tracking
-- **ai/**: AI model integrations and prompts
+- **monitoring/error_tracker.py**: Error tracking and categorization
 
 #### Legacy Automation (`snapshot_automation/`)
 
 **Main Processors** (these are what you actually run):
 - **vtt_to_html_processor.py**: VTT → HTML with NLP analysis
 - **vtt_to_markdown_processor.py**: VTT → Markdown with entities
-- **converter.py**: Simple VTT → Markdown converter
 
 **Supporting Modules**:
 - **transcript_pipeline.py**: Five-stage pipeline (read_vtt → clean_text → improve_formatting → enhance_with_nlp → output)
@@ -158,8 +156,7 @@ VTT File → Parser → Text Cleaner → NLP Processor → AI Enhancement → Fo
   - `get_nlp_model()`: Loads spaCy models on-demand
   - `get_sentence_tokenizer()`: Loads NLTK punkt tokenizer
   - `get_summarization_pipeline()`: Loads transformers models
-- **transcript_parallel.py**: RAG implementation using FAISS and VoyageAI embeddings
-- **transcript_tools.py**: LangChain ReAct agent with web search (Tavily) and calculation tools
+- **transcript_parallel.py**: RAG implementation using FAISS and VoyageAI embeddings for Q&A
 
 ### Lazy Loading Architecture
 
@@ -208,10 +205,8 @@ cat snapshot_automation/examples/README.md  # Read examples documentation
 uv run python snapshot_automation/vtt_to_html_processor.py      # VTT → HTML with NLP analysis
 uv run python snapshot_automation/vtt_to_markdown_processor.py   # VTT → Markdown with entities
 
-# Utilities
+# RAG Q&A utility (optional, requires VOYAGEAI_API_KEY)
 uv run python snapshot_automation/transcript_parallel.py  # RAG-based Q&A system
-uv run python snapshot_automation/transcript_tools.py     # LangChain agent for analysis
-uv run python snapshot_automation/converter.py            # Simple VTT → Markdown
 ```
 
 ## CI/CD Pipeline
@@ -249,8 +244,7 @@ The `.github/workflows/ci.yml` defines a comprehensive CI/CD pipeline:
 
 3. **API Keys Required**:
    - `ANTHROPIC_API_KEY` (always required)
-   - `VOYAGEAI_API_KEY` (optional, for transcript_parallel.py)
-   - `TAVILY_API_KEY` (optional, for transcript_tools.py)
+   - `VOYAGEAI_API_KEY` (optional, for transcript_parallel.py RAG feature)
 
 4. **Test Coverage**: Current coverage is 27%. Coverage target in `pyproject.toml` is 80%.
 
@@ -294,5 +288,5 @@ uv lock
 
 1. **Large Files**: The `TranscriptProcessor` automatically applies memory optimizations for files > 10MB
 2. **Model Loading**: Always use lazy loading functions from `model_loaders.py`
-3. **Memory Monitoring**: Available via `MemoryOptimizer` class with context managers
+3. **Memory Optimization**: Available via `MemoryOptimizer` class with context managers
 4. **Chunking**: Not yet implemented but planned for very large transcripts

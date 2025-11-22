@@ -87,23 +87,12 @@ uv run python claude_quickstart.py
 
 ### Advanced Features
 
-#### RAG-Based Q&A System
+#### RAG-Based Q&A System (Optional)
 ```bash
 uv run python snapshot_automation/transcript_parallel.py
 ```
 Query your transcripts using natural language with vector similarity search.
-
-#### AI Agent with Tools
-```bash
-uv run python snapshot_automation/transcript_tools.py
-```
-Use LangChain agents with web search and calculation capabilities.
-
-#### Simple Conversion
-```bash
-uv run python snapshot_automation/converter.py
-```
-Convert VTT files to Markdown format with speaker timestamps.
+Requires `VOYAGEAI_API_KEY` in your `.env` file.
 
 ## Performance Features
 
@@ -157,19 +146,16 @@ Generated Customer Solution Snapshots include 11 sections:
 ```
 customer-solution-snapshot-generator/
 ├── src/customer_snapshot/      # Main package (modern, well-structured)
-│   ├── ai/                     # AI integrations
 │   ├── core/                   # Core processing
 │   ├── io/                     # Input/output
-│   ├── monitoring/             # System monitoring
+│   ├── monitoring/             # Error tracking
 │   └── utils/                  # Utilities
-├── snapshot_automation/        # Legacy automation scripts
-│   ├── model_loaders.py        # Lazy loading utilities
+├── snapshot_automation/        # Automation scripts
+│   ├── model_loaders.py              # Lazy loading utilities
 │   ├── vtt_to_html_processor.py      # VTT → HTML
 │   ├── vtt_to_markdown_processor.py  # VTT → Markdown
 │   ├── transcript_pipeline.py        # Core pipeline
-│   ├── transcript_parallel.py        # RAG implementation
-│   ├── transcript_tools.py           # LangChain agents
-│   ├── converter.py                  # Simple converter
+│   ├── transcript_parallel.py        # RAG Q&A (optional)
 │   ├── examples/                     # Examples & demos
 │   ├── template_files/               # Document templates
 │   └── vtt_files/                    # Input/output directory
@@ -178,10 +164,6 @@ customer-solution-snapshot-generator/
 │   ├── integration/
 │   └── manual/
 ├── scripts/                    # Utility scripts
-│   ├── benchmarking/
-│   ├── deployment/
-│   ├── monitoring/
-│   └── optimization/
 ├── pyproject.toml              # Project configuration
 ├── uv.lock                     # Dependency lock file
 └── .pre-commit-config.yaml     # Git hooks
@@ -207,8 +189,7 @@ The repository includes a real-world example of processing a Quest Enterprises p
 ## API Keys Required
 
 - **ANTHROPIC_API_KEY** (required for all AI features)
-- **VOYAGEAI_API_KEY** (optional, for RAG features)
-- **TAVILY_API_KEY** (optional, for web search features)
+- **VOYAGEAI_API_KEY** (optional, for RAG Q&A features)
 
 Configure these in `snapshot_automation/.env` (copy from `.env.example`).
 
@@ -217,9 +198,6 @@ Configure these in `snapshot_automation/.env` (copy from `.env.example`).
 - **[SETUP.md](SETUP.md)** - Detailed development setup guide
 - **[CLAUDE.md](CLAUDE.md)** - Guidelines for Claude Code development
 - **[CHANGELOG.md](CHANGELOG.md)** - Version history and changes
-- **[DEPLOYMENT.md](DEPLOYMENT.md)** - Deployment instructions
-- **[MONITORING.md](MONITORING.md)** - System monitoring setup
-- **[PERFORMANCE.md](PERFORMANCE.md)** - Performance optimization guide
 
 ## Development
 
