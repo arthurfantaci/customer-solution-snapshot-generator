@@ -157,7 +157,7 @@ TEST_ENV_VARS = {
     "ANTHROPIC_API_KEY": "test_anthropic_key_123",
     "VOYAGEAI_API_KEY": "test_voyage_key_456",
     "TAVILY_API_KEY": "test_tavily_key_789",
-    "DEFAULT_MODEL": "claude-3-5-sonnet-20240620",
+    "DEFAULT_MODEL": "claude-sonnet-4-5-20250929",
     "MAX_TOKENS": "2000",
     "TEMPERATURE": "0.1",
     "MAX_FILE_SIZE": "1048576",  # 1MB

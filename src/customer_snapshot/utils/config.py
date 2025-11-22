@@ -42,7 +42,7 @@ class Config:
         self.tavily_api_key: Optional[str] = os.getenv("TAVILY_API_KEY")
 
         # Model settings
-        self.default_model = os.getenv("DEFAULT_MODEL", "claude-3-5-sonnet-20240620")
+        self.default_model = os.getenv("DEFAULT_MODEL", "claude-sonnet-4-5-20250929")
         self.max_tokens = int(os.getenv("MAX_TOKENS", "4000"))
         self.temperature = float(os.getenv("TEMPERATURE", "0.0"))
 

@@ -4,7 +4,7 @@ This module implements a Retrieval-Augmented Generation (RAG) system for
 answering questions about meeting transcripts. It combines:
 - FAISS vector database for efficient similarity search
 - VoyageAI embeddings (voyage-law-2 model) for semantic text representation
-- Anthropic Claude (claude-3-5-sonnet) for natural language generation
+- Anthropic Claude (claude-sonnet-4-5) for natural language generation
 - LangChain for document loading, text splitting, and retrieval
 
 The system loads transcript text, splits it into chunks, creates vector embeddings,
@@ -97,7 +97,7 @@ relevant_docs = retriever.invoke(solution_prompt)
 
 # # Example Message
 # message = client.messages.create(
-#     model="claude-3-5-sonnet-20240620",
+#     model="claude-sonnet-4-5-20250929",
 #     max_tokens=2000,
 #     temperature=0,
 #     messages=[
@@ -120,7 +120,7 @@ def get_response(prompt: str) -> list[Any]:
     """Get a response from Claude AI based on the provided prompt.
 
     Sends a prompt to Claude API and returns the generated response content.
-    Uses claude-3-5-sonnet-20240620 model with a 1000 token limit.
+    Uses claude-sonnet-4-5-20250929 model with a 1000 token limit.
 
     Args:
         prompt: The input prompt/question to send to Claude. Should include
@@ -141,7 +141,7 @@ def get_response(prompt: str) -> list[Any]:
         [TextBlock(text='The main challenge was...', type='text')]
     """
     message = client.messages.create(
-        model="claude-3-5-sonnet-20240620",
+        model="claude-sonnet-4-5-20250929",
         max_tokens=1000,
         messages=[{"role": "user", "content": prompt}],
     )

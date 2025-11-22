@@ -17,7 +17,7 @@ class TestConfig:
         """Test config initialization with default values."""
         config = Config()
 
-        assert config.default_model == "claude-3-5-sonnet-20240620"
+        assert config.default_model == "claude-sonnet-4-5-20250929"
         assert config.max_tokens == 4000
         assert config.temperature == 0.0
         assert config.chunk_size == 500
@@ -125,7 +125,7 @@ DEBUG=true
         config = Config.get_default()
 
         assert isinstance(config, Config)
-        assert config.default_model == "claude-3-5-sonnet-20240620"
+        assert config.default_model == "claude-sonnet-4-5-20250929"
 
     @pytest.mark.parametrize(
         "env_var,expected_type",
