@@ -33,7 +33,7 @@
 - Franklin Dorsey (Quest Enterprises)
 - Edward Chase (Quest Enterprises - Director, decision maker)
 - Andrew Neighbor (Quest Enterprises - Senior Financial Analyst, primary stakeholder)
-- Shannon [Lastname] (Quest Enterprises - Amal's manager)
+- Shannon Stone (Quest Enterprises - Andrew's manager)
 - Eileen Brown (Quest Enterprises - Engagement sponsor)
 - Bob Jones (Quiznos Analytics Professional Services)
 - Vincent Martin (Quiznos Analytics Professional Services - Management)
@@ -52,7 +52,7 @@
 
 - Experiencing problems with specific tables
 - Error occurs during data reload
-- Arthur to investigate and potentially delegate to a specialist
+- Bob to investigate and potentially delegate to a specialist
 
 ### Training and Data Catalog
 
@@ -68,16 +68,16 @@
 
 ## Next Steps
 
-1. Arthur to review provided documentation and prepare draft engagement work plan
+1. Bob to review provided documentation and prepare draft engagement work plan
 2. Daily meetings at 9:00 AM ET, starting Tuesday, July 16, 2024
 3. Dedicated session with Andrew Neighbor to discuss booking data dashboard requirements
-4. Filip to send details about ETR dashboard and ServiceNow connector issues
-5. Arthur to investigate ServiceNow connector problem and determine course of action
+4. Franklin to send details about ETR dashboard and ServiceNow connector issues
+5. Bob to investigate ServiceNow connector problem and determine course of action
 
 ## Action Items
 
-- [ ] Filip to send document with booking data dashboard details
-- [ ] Arthur to prepare draft engagement work plan and deliverables
+- [ ] Franklin to send document with booking data dashboard details
+- [ ] Bob to prepare draft engagement work plan and deliverables
 - [ ] Schedule meeting with Andrew Neighbor for booking data dashboard discussion
-- [ ] Filip to provide Quiznos Analytics support ticket number for ServiceNow connector issue
-- [ ] Arthur to review and address ServiceNow connector problem
+- [ ] Franklin to provide Quiznos Analytics support ticket number for ServiceNow connector issue
+- [ ] Bob to review and address ServiceNow connector problem

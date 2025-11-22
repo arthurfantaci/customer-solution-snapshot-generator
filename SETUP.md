@@ -86,16 +86,26 @@ uv run python snapshot_automation/transcript_pipeline.py
 
 ## Working with the Project
 
-### Running Scripts
+### Using the CLI
 
 ```bash
-# Main processors (with lazy loading for fast startup)
-uv run python snapshot_automation/vtt_to_html_processor.py
-uv run python snapshot_automation/vtt_to_markdown_processor.py
+# Process VTT to Markdown (default)
+uv run customer-snapshot process transcript.vtt
 
-# Utilities
+# Process VTT to HTML
+uv run customer-snapshot process transcript.vtt -f html
+
+# Analyze VTT file metadata
+uv run customer-snapshot analyze transcript.vtt
+
+# View configuration
+uv run customer-snapshot config-info
+
+# Run system test
+uv run customer-snapshot test
+
+# Optional: RAG Q&A utility
 uv run python snapshot_automation/transcript_parallel.py
-uv run python snapshot_automation/converter.py
 ```
 
 ### Code Quality Tools

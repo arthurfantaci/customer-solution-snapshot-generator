@@ -13,6 +13,7 @@ from .error_tracker import (
     get_error_tracker,
 )
 
+
 __all__ = [
     "ErrorCategory",
     "ErrorContext",

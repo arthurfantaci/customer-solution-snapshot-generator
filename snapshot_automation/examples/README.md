@@ -8,8 +8,8 @@ This directory contains example input files and output results to demonstrate th
 - **`sample_input.vtt`** - Sample WebVTT transcript file showing the expected input format
 
 ### Output Examples
-- **`sample_output_markdown.md`** - Example output from `vtt_to_markdown_processor.py`
-- **`sample_output_html.html`** - Example output from `vtt_to_html_processor.py`
+- **`sample_output_markdown.md`** - Example Markdown output from transcript processing
+- **`sample_output_html.html`** - Example HTML output from transcript processing
 - **`Quest Enterprises_Kickoff_Transcript_Summary.md`** - Real-world example of a processed customer meeting transcript
 
 ### API Integration Examples
@@ -17,17 +17,18 @@ This directory contains example input files and output results to demonstrate th
 
 ## 🚀 Usage
 
-To test the processors with the sample input:
+To process the sample input using the modern CLI:
 
 ```bash
 # Generate Markdown output
-python vtt_to_markdown_processor.py
+uv run customer-snapshot process sample_input.vtt
 
 # Generate HTML output
-python vtt_to_html_processor.py
-```
+uv run customer-snapshot process sample_input.vtt -f html
 
-Both processors are configured to use `sample_input.vtt` by default when run directly.
+# Analyze the sample file
+uv run customer-snapshot analyze sample_input.vtt
+```
 
 ## 📊 What These Examples Show
 

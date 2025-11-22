@@ -65,25 +65,31 @@ cat snapshot_automation/examples/README.md
 
 ### Basic Transcript Processing
 
-1. Place your VTT transcript files in `snapshot_automation/vtt_files/`
+Process VTT transcript files using the modern CLI:
 
-2. Run the main processors (with fast lazy loading!):
 ```bash
-# Generate HTML output with NLP analysis
-uv run python snapshot_automation/vtt_to_html_processor.py
+# Generate Markdown output (default)
+uv run customer-snapshot process transcript.vtt
 
-# Generate Markdown output
-uv run python snapshot_automation/vtt_to_markdown_processor.py
+# Generate HTML output
+uv run customer-snapshot process transcript.vtt -f html
+
+# Specify custom output path
+uv run customer-snapshot process transcript.vtt -o output.md
+
+# Analyze transcript without processing
+uv run customer-snapshot analyze transcript.vtt
+
+# Validate VTT file format
+uv run customer-snapshot process transcript.vtt --validate-only
 ```
 
-3. **Test Claude API integration** (optional):
+**Test Claude API integration** (optional):
 ```bash
 # Test direct Claude API connectivity
 cd snapshot_automation/examples
 uv run python claude_quickstart.py
 ```
-
-**Note**: Update the hardcoded file paths in the scripts to match your system.
 
 ### Advanced Features
 
@@ -150,10 +156,8 @@ customer-solution-snapshot-generator/
 │   ├── io/                     # Input/output
 │   ├── monitoring/             # Error tracking
 │   └── utils/                  # Utilities
-├── snapshot_automation/        # Automation scripts
+├── snapshot_automation/        # Legacy automation scripts
 │   ├── model_loaders.py              # Lazy loading utilities
-│   ├── vtt_to_html_processor.py      # VTT → HTML
-│   ├── vtt_to_markdown_processor.py  # VTT → Markdown
 │   ├── transcript_pipeline.py        # Core pipeline
 │   ├── transcript_parallel.py        # RAG Q&A (optional)
 │   ├── examples/                     # Examples & demos

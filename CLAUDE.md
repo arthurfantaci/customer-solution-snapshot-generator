@@ -109,19 +109,20 @@ twine check dist/*
 
 ## Architecture
 
-### Dual Architecture: Modern Package + Legacy Scripts
+### Architecture: Modern Package + Supporting Scripts
 
-The project has two parallel implementations that serve different purposes:
+The project has a modern architecture:
 
 1. **`src/customer_snapshot/`** - Modern, well-structured Python package
    - Proper error handling, type hints, and comprehensive docstrings
    - Memory optimization and error tracking
-   - Used for production-grade implementations
+   - CLI interface for all processing tasks
+   - Production-grade implementation
 
-2. **`snapshot_automation/`** - Legacy automation scripts
-   - Quick prototyping and experimentation
-   - Contains the actual working processors with hardcoded paths
-   - **Important**: All executable scripts are in this directory
+2. **`snapshot_automation/`** - Supporting utilities and templates
+   - Template files for document generation
+   - RAG Q&A system (optional feature)
+   - Examples and sample data
 
 ### Core Processing Flow
 
@@ -144,13 +145,16 @@ VTT File → Parser → Text Cleaner → NLP Processor → AI Enhancement → Fo
 - **utils/memory_optimizer.py**: Memory optimization for large files
 - **monitoring/error_tracker.py**: Error tracking and categorization
 
-#### Legacy Automation (`snapshot_automation/`)
+#### CLI Interface (`src/customer_snapshot/cli.py`)
 
-**Main Processors** (these are what you actually run):
-- **vtt_to_html_processor.py**: VTT → HTML with NLP analysis
-- **vtt_to_markdown_processor.py**: VTT → Markdown with entities
+The modern CLI provides comprehensive transcript processing:
+- **process**: Process VTT files to Markdown or HTML
+- **analyze**: Analyze VTT files and extract metadata
+- **config-info**: Display configuration information
+- **test**: Run system tests
 
-**Supporting Modules**:
+#### Supporting Modules (`snapshot_automation/`)
+
 - **transcript_pipeline.py**: Five-stage pipeline (read_vtt → clean_text → improve_formatting → enhance_with_nlp → output)
 - **model_loaders.py**: Lazy loading utilities with `@lru_cache` decorators
   - `get_nlp_model()`: Loads spaCy models on-demand
@@ -189,23 +193,41 @@ Located in `snapshot_automation/template_files/`:
 - **System_Prompt_Customer_Success_Snapshot.txt**: AI prompt for section generation
 - **All_Prompt_Details.txt**: Complete prompt documentation
 
-## Running Scripts
+## Using the CLI
 
-**Important**: All main processing scripts have hardcoded file paths that need updating before running. Look for paths like `C:/Users/DQA/...` and update them to your local paths.
+The modern CLI provides all transcript processing functionality:
 
-**First**, check examples:
+```bash
+# Process VTT to Markdown (default)
+uv run customer-snapshot process transcript.vtt
+
+# Process VTT to HTML
+uv run customer-snapshot process transcript.vtt -f html
+
+# Specify output file
+uv run customer-snapshot process transcript.vtt -o output.md
+
+# Analyze VTT file metadata
+uv run customer-snapshot analyze transcript.vtt
+
+# Validate VTT format only
+uv run customer-snapshot process transcript.vtt --validate-only
+
+# View configuration
+uv run customer-snapshot config-info
+
+# Run system test
+uv run customer-snapshot test
+```
+
+**Examples:**
 ```bash
 ls snapshot_automation/examples/  # View example inputs and outputs
 cat snapshot_automation/examples/README.md  # Read examples documentation
 ```
 
-**Then**, run the processors:
+**Optional RAG Q&A utility** (requires VOYAGEAI_API_KEY):
 ```bash
-# Main processors (with lazy loading for fast startup)
-uv run python snapshot_automation/vtt_to_html_processor.py      # VTT → HTML with NLP analysis
-uv run python snapshot_automation/vtt_to_markdown_processor.py   # VTT → Markdown with entities
-
-# RAG Q&A utility (optional, requires VOYAGEAI_API_KEY)
 uv run python snapshot_automation/transcript_parallel.py  # RAG-based Q&A system
 ```
 
@@ -240,7 +262,7 @@ The `.github/workflows/ci.yml` defines a comprehensive CI/CD pipeline:
 
 1. **Modern Tooling**: All configurations are in `pyproject.toml`. Use `uv` for dependency management and `ruff` for linting/formatting.
 
-2. **File Paths**: Legacy scripts in `snapshot_automation/` contain hardcoded Windows paths that must be updated.
+2. **CLI-First Approach**: Use the modern CLI (`customer-snapshot`) for all transcript processing tasks.
 
 3. **API Keys Required**:
    - `ANTHROPIC_API_KEY` (always required)
